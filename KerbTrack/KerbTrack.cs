@@ -20,25 +20,6 @@ using System.Runtime.InteropServices;
 [KSPAddon(KSPAddon.Startup.Flight, false)]
 public class KerbTrack : MonoBehaviour
 {
-	[StructLayout(LayoutKind.Sequential)]
-	public struct FreeTrackData
-	{
-		public int dataid;
-		public int camwidth, camheight;
-		public float Yaw, Pitch, Roll, X, Y, Z;
-		public float RawYaw, RawPitch, RawRoll;
-		public float RawX, RawY, RawZ;
-		public float x1, y1, x2, y2, x3, y3, x4, y4;
-	}
-
-	[DllImport("FreeTrackClient")]
-	public static extern bool FTGetData(ref FreeTrackData data);
-	[DllImport("FreeTrackClient")]
-	public static extern string FTGetDllVersion();
-	[DllImport("FreeTrackClient")]
-	public static extern void FTReportID(Int32 name);
-	[DllImport("FreeTrackClient")]
-	public static extern string FTProvider();
 
 	public bool guiVisible = false;
 
@@ -48,6 +29,14 @@ public class KerbTrack : MonoBehaviour
 		GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
 		RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
 		LoadSettings();
+		if (useTrackIR)
+		{
+			//TODO: Make TrackIRTracker
+		}
+		else
+		{
+			tracker = new FreeTrackTracker();
+		}
 	}
 
 	public void OnDestroy()
@@ -180,6 +169,7 @@ public class KerbTrack : MonoBehaviour
 		settings.AddValue("yMinIVA", yMinIVA);
 		settings.AddValue("zMaxIVA", zMaxIVA);
 		settings.AddValue("zMinIVA", zMinIVA);
+		settings.AddValue("useTrackIRSDK", useTrackIR);
 
 		settings.Save(AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)) + "/settings.cfg");
 	}
@@ -212,6 +202,7 @@ public class KerbTrack : MonoBehaviour
 			if (settings.HasValue("yMinIVA")) yMinIVA = float.Parse(settings.GetValue("yMinIVA"));
 			if (settings.HasValue("zMaxIVA")) zMaxIVA = float.Parse(settings.GetValue("zMaxIVA"));
 			if (settings.HasValue("zMinIVA")) zMinIVA = float.Parse(settings.GetValue("zMinIVA"));
+			if (settings.HasValue("useTrackIRSDK")) useTrackIR = bool.Parse(settings.GetValue("useTrackIRSDK"));
 		}
 	}
 
@@ -264,6 +255,11 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public float zMinIVA = -0.15f;
 
+	[KSPField]
+	public bool useTrackIR = false;
+	[KSPField]
+	public ITracker tracker;
+
 	public float pv = 0f;
 	public float yv = 0f;
 	public float rv = 0f;
@@ -278,15 +274,16 @@ public class KerbTrack : MonoBehaviour
 
 		if (trackerEnabled)
 		{
-			FreeTrackData trackData = new FreeTrackData();
-			if (FTGetData(ref trackData))
+			if(tracker != null) 
 			{
-				float pitch = trackData.Pitch * 100;
-				float yaw = trackData.Yaw * 100;
-				float roll = trackData.Roll * 100;
-				float x = trackData.X / 100;
-				float y = trackData.Y / 100;
-				float z = trackData.Z / 100;
+				Vector3 rot = tracker.getRotation();
+				float pitch = (float)rot.x * 100;
+				float yaw = (float)rot.y * 100;
+				float roll = (float)rot.z * 100;
+				Vector3 pos = tracker.getPosition();
+				float x = pos.x / 100;
+				float y = pos.y / 100;
+				float z = pos.z / 100;
 
 				switch (CameraManager.Instance.currentCameraMode)
 				{
