@@ -31,9 +31,9 @@ class FreeTrackTracker : ITracker
 		FreeTrackData trackData = new FreeTrackData();
 		if (FTGetData(ref trackData))
 		{
-			rot.x = trackData.Pitch;
-			rot.y = trackData.Yaw;
-			rot.z = trackData.Roll;
+			rot.x = trackData.Pitch * 100;
+			rot.y = trackData.Yaw * 100;
+			rot.z = trackData.Roll * 100;
 		}
 		return rot;
 	}
@@ -43,9 +43,9 @@ class FreeTrackTracker : ITracker
 		FreeTrackData trackData = new FreeTrackData();
 		if (FTGetData(ref trackData))
 		{
-			pos.x = trackData.X;
-			pos.y = trackData.Y;
-			pos.z = trackData.Z;
+			pos.x = trackData.X / 100;
+			pos.y = trackData.Y / 100;
+			pos.z = trackData.Z / 100;
 		}
 		return pos;
 	}

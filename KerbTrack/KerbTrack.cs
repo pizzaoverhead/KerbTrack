@@ -29,9 +29,10 @@ public class KerbTrack : MonoBehaviour
 		GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
 		RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
 		LoadSettings();
+		Debug.Log("Using TrackIR: " + useTrackIR);
 		if (useTrackIR)
 		{
-			//TODO: Make TrackIRTracker
+			tracker = new TrackIRTracker();
 		}
 		else
 		{
@@ -277,13 +278,13 @@ public class KerbTrack : MonoBehaviour
 			if(tracker != null) 
 			{
 				Vector3 rot = tracker.getRotation();
-				float pitch = (float)rot.x * 100;
-				float yaw = (float)rot.y * 100;
-				float roll = (float)rot.z * 100;
+				float pitch = (float)rot.x;
+				float yaw = (float)rot.y;
+				float roll = (float)rot.z;
 				Vector3 pos = tracker.getPosition();
-				float x = pos.x / 100;
-				float y = pos.y / 100;
-				float z = pos.z / 100;
+				float x = pos.x;
+				float y = pos.y;
+				float z = pos.z;
 
 				switch (CameraManager.Instance.currentCameraMode)
 				{
