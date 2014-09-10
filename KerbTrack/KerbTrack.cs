@@ -59,7 +59,27 @@ public class KerbTrack : MonoBehaviour
 	}
 
 	protected Rect windowPos = new Rect(Screen.width / 2, Screen.height / 2, 10f, 10f);
-
+	
+	private void slider(string label, ref float variable, float from, float to) {
+		GUILayout.BeginHorizontal();
+		GUILayout.Label(label + ": " + variable.ToString());
+		GUILayout.FlexibleSpace();
+		variable = GUILayout.HorizontalSlider(variable, from, to, GUILayout.Width(100));
+		GUILayout.EndHorizontal();
+	}
+	private void slider_scale(string label, ref float variable) {
+		slider(label, ref variable, 0, 1);
+	}
+	private void slider_offset(string label, ref float variable) {
+		slider(label, ref variable, -1, 1);
+	}
+	private void label(string text, object obj) {
+		GUILayout.BeginHorizontal();
+		GUILayout.Label(text);
+		GUILayout.FlexibleSpace();
+		GUILayout.Label(obj.ToString(), GUILayout.Width(100));
+		GUILayout.EndHorizontal();
+	}
 	private void mainGUI(int windowID)
 	{
 		GUILayout.BeginVertical();
@@ -70,47 +90,34 @@ public class KerbTrack : MonoBehaviour
 		if (CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.Internal ||
 			CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.IVA)
 		{
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Pitch");
-			GUILayout.Label(pv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(pitchScaleIVA.ToString());
-			pitchScaleIVA = GUILayout.HorizontalSlider(pitchScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Yaw");
-			GUILayout.Label(yv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(yawScaleIVA.ToString());
-			yawScaleIVA = GUILayout.HorizontalSlider(yawScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Roll");
-			GUILayout.Label(rv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(rollScaleIVA.ToString());
-			rollScaleIVA = GUILayout.HorizontalSlider(rollScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Left/Right (X)");
-			GUILayout.Label(xScale.ToString());
-			GUILayout.EndHorizontal();
-			xScale = GUILayout.HorizontalSlider(xScale, 0, 1);
-			GUILayout.Label(xp.ToString());
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Up/Down (Y)");
-			GUILayout.Label(yp.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(yScale.ToString());
-			yScale = GUILayout.HorizontalSlider(yScale, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("In/Out (Z)");
-			GUILayout.Label(zp.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(zScale.ToString());
-			zScale = GUILayout.HorizontalSlider(zScale, 0, 1);
+			
+			label("IVA Pitch", pv);
+			label("IVA Yaw", yv);
+			label("IVA Roll", rv);
+			
+			GUILayout.Label("Scale");
+			slider_scale("IVA Pitch", ref pitchScaleIVA);
+			slider_scale("IVA Yaw",   ref yawScaleIVA);
+			slider_scale("IVA Roll",  ref rollScaleIVA);
+			
+			GUILayout.Label("Offset");
+			slider_offset("IVA Pitch", ref pitchOffsetIVA);
+			slider_offset("IVA Yaw",   ref yawOffsetIVA);
+			slider_offset("IVA Roll",  ref rollOffsetIVA);
+			
+			label("IVA Left-Right", xp);
+			label("IVA Up-Down", yp);
+			label("IVA In-Out", zp);
+			
+			GUILayout.Label("Scale");
+			slider_scale("Left/Right (X)", ref xScale);
+			slider_scale("Up/Down (Y)",    ref yScale);
+			slider_scale("In/Out (Z)",     ref zScale);
+			
+			GUILayout.Label("Offset");
+			slider("Left/Right (X)", ref xOffset, xMinIVA, xMaxIVA);
+			slider("Up/Down (Y)",    ref yOffset, yMinIVA, yMaxIVA);
+			slider("In/Out (Z)",     ref zOffset, zMinIVA, zMaxIVA);
 		}
 		else
 		{
