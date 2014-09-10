@@ -298,20 +298,20 @@ public class KerbTrack : MonoBehaviour
 					case CameraManager.CameraMode.Internal: // Window zoom cameras
 					case CameraManager.CameraMode.IVA: // Main IVA cameras
 						{
+							pv = pitch * pitchScaleIVA + pitchOffsetIVA;
+							yv = yaw * yawScaleIVA + yawOffsetIVA;
+							rv = roll * rollScaleIVA + rollOffsetIVA;
+							xp = x * xScale + xOffset;
+							yp = y * yScale + yOffset;
+							zp = z * -zScale + zOffset;
 							InternalCamera.Instance.transform.localEulerAngles = new Vector3(
-								-Mathf.Clamp(pitch * pitchScaleIVA, pitchMinIVA, pitchMaxIVA),
-								-Mathf.Clamp(yaw * yawScaleIVA, yawMinIVA, yawMaxIVA),
-								Mathf.Clamp(roll * rollScaleIVA, rollMinIVA, rollMaxIVA));
+								-Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
+								-Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
+								Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
 							InternalCamera.Instance.transform.localPosition = new Vector3(
-								Mathf.Clamp(x * xScale, xMinIVA, xMaxIVA),
-								Mathf.Clamp(y * yScale, yMinIVA, yMaxIVA),
-								Mathf.Clamp(z * -zScale, zMinIVA, zMaxIVA));
-							pv = pitch * pitchScaleIVA;
-							yv = yaw * yawScaleIVA;
-							rv = roll * rollScaleIVA;
-							xp = x * xScale;
-							yp = y * yScale;
-							zp = z * -zScale;
+								Mathf.Clamp(xp, xMinIVA, xMaxIVA),
+								Mathf.Clamp(yp, yMinIVA, yMaxIVA),
+								Mathf.Clamp(zp, zMinIVA, zMaxIVA));
 							// Without setting the flight camera transform, the pod rotates about without changing the background.
 							FlightCamera.fetch.transform.rotation = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.rotation);
 							FlightCamera.fetch.transform.position = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.position);
