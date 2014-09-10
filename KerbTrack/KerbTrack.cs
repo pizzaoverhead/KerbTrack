@@ -28,13 +28,19 @@ public class KerbTrack : MonoBehaviour
 		GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
 		RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
 		LoadSettings();
-		Debug.Log("Using TrackIR: " + useTrackIR);
-		if (useTrackIR)
+		if (useOVR)
 		{
+			Debug.Log("KerbTrack: use OVR");
+			tracker = new OVRTracker();
+		}
+		else if (useTrackIR)
+		{
+			Debug.Log("KerbTrack: use TrackIR");
 			tracker = new TrackIRTracker();
 		}
 		else
 		{
+			Debug.Log("KerbTrack: use FreeTrack");
 			tracker = new FreeTrackTracker();
 		}
 	}
@@ -227,9 +233,9 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public float yawMinIVA = -135f;
 	[KSPField]
-	public float rollMaxIVA = 45f;
+	public float rollMaxIVA = 90f;
 	[KSPField]
-	public float rollMinIVA = -45f;
+	public float rollMinIVA = -90f;
 	[KSPField]
 	public float xMaxIVA = 0.15f;
 	[KSPField]
@@ -243,6 +249,8 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public float zMinIVA = -0.15f;
 
+	[KSPField]
+	public bool useOVR = false;
 	[KSPField]
 	public bool useTrackIR = false;
 	[KSPField]
