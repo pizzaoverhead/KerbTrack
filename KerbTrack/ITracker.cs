@@ -1,7 +1,13 @@
 ﻿using System;
+using UnityEngine;
 
 public interface ITracker
 {
-	Vector3d getRotation();
-	Vector3d getPosition();
+    void GetData(ref Vector3 rot, ref Vector3 pos);
+
+    // Separate reads of rotation and position cause FreeTrack to show no data for the second read.
+	//Vector3d GetRotation();
+	//Vector3d GetPosition();
+
+    void ResetOrientation();
 }
