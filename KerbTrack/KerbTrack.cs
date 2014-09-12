@@ -14,8 +14,7 @@
 
 using System;
 using UnityEngine;
-using System.Collections;
-using System.Runtime.InteropServices;
+using System.Reflection;
 
 [KSPAddon(KSPAddon.Startup.Flight, false)]
 public class KerbTrack : MonoBehaviour
@@ -29,13 +28,19 @@ public class KerbTrack : MonoBehaviour
 		GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
 		RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
 		LoadSettings();
-		Debug.Log("Using TrackIR: " + useTrackIR);
-		if (useTrackIR)
+		if (useOVR)
 		{
+			Debug.Log("KerbTrack: use OVR");
+			tracker = new OVRTracker();
+		}
+		else if (useTrackIR)
+		{
+			Debug.Log("KerbTrack: use TrackIR");
 			tracker = new TrackIRTracker();
 		}
 		else
 		{
+			Debug.Log("KerbTrack: use FreeTrack");
 			tracker = new FreeTrackTracker();
 		}
 	}
@@ -60,7 +65,27 @@ public class KerbTrack : MonoBehaviour
 	}
 
 	protected Rect windowPos = new Rect(Screen.width / 2, Screen.height / 2, 10f, 10f);
-
+	
+	private void slider(string label, ref float variable, float from, float to) {
+		GUILayout.BeginHorizontal();
+		GUILayout.Label(label + ": " + variable.ToString());
+		GUILayout.FlexibleSpace();
+		variable = GUILayout.HorizontalSlider(variable, from, to, GUILayout.Width(100));
+		GUILayout.EndHorizontal();
+	}
+	private void slider_scale(string label, ref float variable) {
+		slider(label, ref variable, 0, 1);
+	}
+	private void slider_offset(string label, ref float variable) {
+		slider(label, ref variable, -1, 1);
+	}
+	private void label(string text, object obj) {
+		GUILayout.BeginHorizontal();
+		GUILayout.Label(text);
+		GUILayout.FlexibleSpace();
+		GUILayout.Label(obj.ToString(), GUILayout.Width(100));
+		GUILayout.EndHorizontal();
+	}
 	private void mainGUI(int windowID)
 	{
 		GUILayout.BeginVertical();
@@ -71,47 +96,34 @@ public class KerbTrack : MonoBehaviour
 		if (CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.Internal ||
 			CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.IVA)
 		{
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Pitch");
-			GUILayout.Label(pv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(pitchScaleIVA.ToString());
-			pitchScaleIVA = GUILayout.HorizontalSlider(pitchScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Yaw");
-			GUILayout.Label(yv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(yawScaleIVA.ToString());
-			yawScaleIVA = GUILayout.HorizontalSlider(yawScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("IVA Roll");
-			GUILayout.Label(rv.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(rollScaleIVA.ToString());
-			rollScaleIVA = GUILayout.HorizontalSlider(rollScaleIVA, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Left/Right (X)");
-			GUILayout.Label(xScale.ToString());
-			GUILayout.EndHorizontal();
-			xScale = GUILayout.HorizontalSlider(xScale, 0, 1);
-			GUILayout.Label(xp.ToString());
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("Up/Down (Y)");
-			GUILayout.Label(yp.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(yScale.ToString());
-			yScale = GUILayout.HorizontalSlider(yScale, 0, 1);
-
-			GUILayout.BeginHorizontal();
-			GUILayout.Label("In/Out (Z)");
-			GUILayout.Label(zp.ToString());
-			GUILayout.EndHorizontal();
-			GUILayout.Label(zScale.ToString());
-			zScale = GUILayout.HorizontalSlider(zScale, 0, 1);
+			
+			label("IVA Pitch", pv);
+			label("IVA Yaw", yv);
+			label("IVA Roll", rv);
+			
+			GUILayout.Label("Scale");
+			slider_scale("IVA Pitch", ref pitchScaleIVA);
+			slider_scale("IVA Yaw",   ref yawScaleIVA);
+			slider_scale("IVA Roll",  ref rollScaleIVA);
+			
+			GUILayout.Label("Offset");
+			slider_offset("IVA Pitch", ref pitchOffsetIVA);
+			slider_offset("IVA Yaw",   ref yawOffsetIVA);
+			slider_offset("IVA Roll",  ref rollOffsetIVA);
+			
+			label("IVA Left-Right", xp);
+			label("IVA Up-Down", yp);
+			label("IVA In-Out", zp);
+			
+			GUILayout.Label("Scale");
+			slider_scale("Left/Right (X)", ref xScale);
+			slider_scale("Up/Down (Y)",    ref yScale);
+			slider_scale("In/Out (Z)",     ref zScale);
+			
+			GUILayout.Label("Offset");
+			slider("Left/Right (X)", ref xOffset, xMinIVA, xMaxIVA);
+			slider("Up/Down (Y)",    ref yOffset, yMinIVA, yMaxIVA);
+			slider("In/Out (Z)",     ref zOffset, zMinIVA, zMaxIVA);
 		}
 		else
 		{
@@ -149,28 +161,18 @@ public class KerbTrack : MonoBehaviour
 	{
 		settings = new ConfigNode();
 		settings.name = "SETTINGS";
+		// save all [KSPField] public floats by reflection
+		// foreach member field..
+		foreach (FieldInfo f in GetType().GetFields()) {
+			// if they're a [KSPField] float..
+			if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float))) {
+				// add them
+				settings.AddValue(f.Name, f.GetValue(this));
+			}
+		}
+		settings.AddValue("useOVR", useOVR.ToString());
+		settings.AddValue("useTrackIRSDK", useTrackIR.ToString());
 		settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
-		settings.AddValue("pitchScaleIVA", pitchScaleIVA);
-		settings.AddValue("yawScaleIVA", yawScaleIVA);
-		settings.AddValue("rollScaleIVA", rollScaleIVA);
-		settings.AddValue("xScale", xScale);
-		settings.AddValue("yScale", yScale);
-		settings.AddValue("zScale", zScale);
-		settings.AddValue("pitchScaleFlight", pitchScaleFlight);
-		settings.AddValue("yawScaleFlight", yawScaleFlight);
-		settings.AddValue("pitchMaxIVA", pitchMaxIVA);
-		settings.AddValue("pitchMinIVA", pitchMinIVA);
-		settings.AddValue("yawMaxIVA", yawMaxIVA);
-		settings.AddValue("yawMinIVA", yawMinIVA);
-		settings.AddValue("rollMaxIVA", rollMaxIVA);
-		settings.AddValue("rollMinIVA", rollMinIVA);
-		settings.AddValue("xMaxIVA", xMaxIVA);
-		settings.AddValue("xMinIVA", xMinIVA);
-		settings.AddValue("yMaxIVA", yMaxIVA);
-		settings.AddValue("yMinIVA", yMinIVA);
-		settings.AddValue("zMaxIVA", zMaxIVA);
-		settings.AddValue("zMinIVA", zMinIVA);
-		settings.AddValue("useTrackIRSDK", useTrackIR);
 
 		settings.Save(AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)) + "/settings.cfg");
 	}
@@ -182,28 +184,19 @@ public class KerbTrack : MonoBehaviour
 
 		if (settings != null)
 		{
-			if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey = (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
-			if (settings.HasValue("pitchScaleIVA")) pitchScaleIVA = float.Parse(settings.GetValue("pitchScaleIVA"));
-			if (settings.HasValue("yawScaleIVA")) yawScaleIVA = float.Parse(settings.GetValue("yawScaleIVA"));
-			if (settings.HasValue("rollScaleIVA")) rollScaleIVA = float.Parse(settings.GetValue("rollScaleIVA"));
-			if (settings.HasValue("xScale")) xScale = float.Parse(settings.GetValue("xScale"));
-			if (settings.HasValue("yScale")) yScale = float.Parse(settings.GetValue("yScale"));
-			if (settings.HasValue("zScale")) zScale = float.Parse(settings.GetValue("zScale"));
-			if (settings.HasValue("pitchScaleFlight")) pitchScaleFlight = float.Parse(settings.GetValue("pitchScaleFlight"));
-			if (settings.HasValue("yawScaleFlight")) yawScaleFlight = float.Parse(settings.GetValue("yawScaleFlight"));
-			if (settings.HasValue("pitchMaxIVA")) pitchMaxIVA = float.Parse(settings.GetValue("pitchMaxIVA"));
-			if (settings.HasValue("pitchMinIVA")) pitchMinIVA = float.Parse(settings.GetValue("pitchMinIVA"));
-			if (settings.HasValue("yawMaxIVA")) yawMaxIVA = float.Parse(settings.GetValue("yawMaxIVA"));
-			if (settings.HasValue("yawMinIVA")) yawMinIVA = float.Parse(settings.GetValue("yawMinIVA"));
-			if (settings.HasValue("rollMaxIVA")) rollMaxIVA = float.Parse(settings.GetValue("rollMaxIVA"));
-			if (settings.HasValue("rollMinIVA")) rollMinIVA = float.Parse(settings.GetValue("rollMinIVA"));
-			if (settings.HasValue("xMaxIVA")) xMaxIVA = float.Parse(settings.GetValue("xMaxIVA"));
-			if (settings.HasValue("xMinIVA")) xMinIVA = float.Parse(settings.GetValue("xMinIVA"));
-			if (settings.HasValue("yMaxIVA")) yMaxIVA = float.Parse(settings.GetValue("yMaxIVA"));
-			if (settings.HasValue("yMinIVA")) yMinIVA = float.Parse(settings.GetValue("yMinIVA"));
-			if (settings.HasValue("zMaxIVA")) zMaxIVA = float.Parse(settings.GetValue("zMaxIVA"));
-			if (settings.HasValue("zMinIVA")) zMinIVA = float.Parse(settings.GetValue("zMinIVA"));
+			// load all [KSPField] public floats by reflection
+			// foreach member field..
+			foreach (FieldInfo f in GetType().GetFields()) {
+				// if they're a [KSPField] float..
+				if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float))) {
+					// load them from the settings file.
+					if (settings.HasValue(f.Name))
+						f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
+				}
+			}
+			if (settings.HasValue("useOVR")) useOVR = bool.Parse(settings.GetValue("useOVR"));
 			if (settings.HasValue("useTrackIRSDK")) useTrackIR = bool.Parse(settings.GetValue("useTrackIRSDK"));
+			if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey = (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
 		}
 	}
 
@@ -214,17 +207,17 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public KeyCode toggleEnabledKey = KeyCode.ScrollLock;
 	[KSPField]
-	public float pitchScaleIVA = 0.3f;
+	public float pitchScaleIVA = 0.3f, pitchOffsetIVA = 0.0f;
 	[KSPField]
-	public float yawScaleIVA = 0.3f;
+	public float yawScaleIVA = 0.3f, yawOffsetIVA = 0.0f;
 	[KSPField]
-	public float rollScaleIVA = 0.15f;
+	public float rollScaleIVA = 0.15f, rollOffsetIVA = 0.0f;
 	[KSPField]
-	public float xScale = 0.1f;
+	public float xScale = 0.1f, xOffset = 0.0f;
 	[KSPField]
-	public float yScale = 0.1f;
+	public float yScale = 0.1f, yOffset = 0.0f;
 	[KSPField]
-	public float zScale = 0.1f;
+	public float zScale = 0.1f, zOffset = 0.0f;
 	[KSPField]
 	public float pitchScaleFlight = 0.01f;
 	[KSPField]
@@ -240,9 +233,9 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public float yawMinIVA = -135f;
 	[KSPField]
-	public float rollMaxIVA = 45f;
+	public float rollMaxIVA = 90f;
 	[KSPField]
-	public float rollMinIVA = -45f;
+	public float rollMinIVA = -90f;
 	[KSPField]
 	public float xMaxIVA = 0.15f;
 	[KSPField]
@@ -256,6 +249,8 @@ public class KerbTrack : MonoBehaviour
 	[KSPField]
 	public float zMinIVA = -0.15f;
 
+	[KSPField]
+	public bool useOVR = false;
 	[KSPField]
 	public bool useTrackIR = false;
 	[KSPField]
@@ -303,20 +298,20 @@ public class KerbTrack : MonoBehaviour
 					case CameraManager.CameraMode.Internal: // Window zoom cameras
 					case CameraManager.CameraMode.IVA: // Main IVA cameras
 						{
+							pv = pitch * pitchScaleIVA + pitchOffsetIVA;
+							yv = yaw * yawScaleIVA + yawOffsetIVA;
+							rv = roll * rollScaleIVA + rollOffsetIVA;
+							xp = x * xScale + xOffset;
+							yp = y * yScale + yOffset;
+							zp = z * -zScale + zOffset;
 							InternalCamera.Instance.transform.localEulerAngles = new Vector3(
-								-Mathf.Clamp(pitch * pitchScaleIVA, pitchMinIVA, pitchMaxIVA),
-								-Mathf.Clamp(yaw * yawScaleIVA, yawMinIVA, yawMaxIVA),
-								Mathf.Clamp(roll * rollScaleIVA, rollMinIVA, rollMaxIVA));
+								-Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
+								-Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
+								Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
 							InternalCamera.Instance.transform.localPosition = new Vector3(
-								Mathf.Clamp(x * xScale, xMinIVA, xMaxIVA),
-								Mathf.Clamp(y * yScale, yMinIVA, yMaxIVA),
-								Mathf.Clamp(z * -zScale, zMinIVA, zMaxIVA));
-							pv = pitch * pitchScaleIVA;
-							yv = yaw * yawScaleIVA;
-							rv = roll * rollScaleIVA;
-							xp = x * xScale;
-							yp = y * yScale;
-							zp = z * -zScale;
+								Mathf.Clamp(xp, xMinIVA, xMaxIVA),
+								Mathf.Clamp(yp, yMinIVA, yMaxIVA),
+								Mathf.Clamp(zp, zMinIVA, zMaxIVA));
 							// Without setting the flight camera transform, the pod rotates about without changing the background.
 							FlightCamera.fetch.transform.rotation = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.rotation);
 							FlightCamera.fetch.transform.position = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.position);
