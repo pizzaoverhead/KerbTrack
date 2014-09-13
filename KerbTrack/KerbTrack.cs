@@ -13,8 +13,8 @@
  */
 
 using System;
-using UnityEngine;
 using System.Reflection;
+using UnityEngine;
 
 [KSPAddon(KSPAddon.Startup.Flight, false)]
 public class KerbTrack : MonoBehaviour

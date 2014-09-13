@@ -1,7 +1,5 @@
-﻿using System;
+﻿using TrackIRUnity;
 using UnityEngine;
-using System.Collections;
-using TrackIRUnity;
 
 class TrackIRTracker : ITracker
 {

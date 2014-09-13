@@ -1,7 +1,6 @@
 ﻿using System;
-using UnityEngine;
-using System.Collections;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 class FreeTrackTracker : ITracker
 {
@@ -26,13 +25,13 @@ class FreeTrackTracker : ITracker
 	[DllImport("FreeTrackClient")]
 	public static extern string FTProvider();
 #else
-    [DllImport("FreeTrackClient64bit")]
+    [DllImport("FreeTrackClient64")]
     public static extern bool FTGetData(ref FreeTrackData data);
-    [DllImport("FreeTrackClient64bit")]
+    [DllImport("FreeTrackClient64")]
     public static extern string FTGetDllVersion();
-    [DllImport("FreeTrackClient64bit")]
+    [DllImport("FreeTrackClient64")]
     public static extern void FTReportID(Int32 name);
-    [DllImport("FreeTrackClient64bit")]
+    [DllImport("FreeTrackClient64")]
     public static extern string FTProvider();
 #endif
 
