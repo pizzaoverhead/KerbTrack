@@ -10,3 +10,9 @@ public interface ITracker
 
     void ResetOrientation();
 }
+
+// Only use this if your rotation data is authoritive!
+public interface IQuatTracker
+{
+	void GetQuatData(ref Quaternion rot);
+}

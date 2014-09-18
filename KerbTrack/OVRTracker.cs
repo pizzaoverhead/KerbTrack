@@ -2,36 +2,37 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-class OVRTracker : ITracker
+class OVRTracker : ITracker, IQuatTracker
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Vector3f {
 		public float x, y, z;
 	}
+	[StructLayout(LayoutKind.Sequential)]
+	public struct Quat {
+		public float x, y, z, w;
+	}
 
 #if WIN32
-	[DllImport("Oculus OVR PosRotWrapper")]
-	public static extern IntPtr wrapper_init();
-	[DllImport("Oculus OVR PosRotWrapper")]
-	public static extern void wrapper_destroy(IntPtr ptr);
-	[DllImport("Oculus OVR PosRotWrapper")]
-	public static extern void wrapper_start_sensor(IntPtr ptr);
-	[DllImport("Oculus OVR PosRotWrapper")]
-	public static extern Vector3f wrapper_get_rotation(IntPtr ptr);
-	[DllImport("Oculus OVR PosRotWrapper")]
-	public static extern Vector3f wrapper_get_position(IntPtr ptr);
+	public const string DllName = "Oculus OVR PosRotWrapper";
 #else
-    [DllImport("Oculus OVR PosRotWrapper 64-bit")]
-    public static extern IntPtr wrapper_init();
-    [DllImport("Oculus OVR PosRotWrapper 64-bit")]
-    public static extern void wrapper_destroy(IntPtr ptr);
-    [DllImport("Oculus OVR PosRotWrapper 64-bit")]
-    public static extern void wrapper_start_sensor(IntPtr ptr);
-    [DllImport("Oculus OVR PosRotWrapper 64-bit")]
-    public static extern Vector3f wrapper_get_rotation(IntPtr ptr);
-    [DllImport("Oculus OVR PosRotWrapper 64-bit")]
-    public static extern Vector3f wrapper_get_position(IntPtr ptr);
+	public const string DllName = "Oculus OVR PosRotWrapper 64-bit";
 #endif
+	
+	[DllImport(DllName)]
+	public static extern IntPtr wrapper_init();
+	[DllImport(DllName)]
+	public static extern void wrapper_destroy(IntPtr ptr);
+	[DllImport(DllName)]
+	public static extern void wrapper_start_sensor(IntPtr ptr);
+	[DllImport(DllName)]
+	public static extern Vector3f wrapper_get_rotation(IntPtr ptr);
+	[DllImport(DllName)]
+	public static extern Vector3f wrapper_get_position(IntPtr ptr);
+	[DllImport(DllName)]
+	public static extern Quat wrapper_get_quat_rotation(IntPtr ptr);
+	[DllImport(DllName)]
+	public static extern void wrapper_reset_orientation(IntPtr ptr);
 	
 	public IntPtr wrapper;
 
@@ -55,20 +56,18 @@ class OVRTracker : ITracker
         pos.z = p.z;
     }
 
-	public Vector3d GetRotation()
-	{
-		Vector3f v = wrapper_get_rotation(wrapper);
-		return new Vector3d(v.x * 100, v.y * 100, v.z * 100);
-	}
-
-	public Vector3d GetPosition()
-	{
-		Vector3f v = wrapper_get_position(wrapper);
-		return new Vector3d(v.x, v.y, v.z);
-	}
-
+    public void GetQuatData(ref Quaternion res)
+    {
+    	Quat quat = wrapper_get_quat_rotation(wrapper);
+    	// What the hell?
+    	res.x = -quat.x;
+    	res.y = -quat.y;
+    	res.z = quat.z;
+    	res.w = quat.w;
+    }
+    
     public void ResetOrientation()
     {
-
+    	wrapper_reset_orientation(wrapper);
     }
 }
