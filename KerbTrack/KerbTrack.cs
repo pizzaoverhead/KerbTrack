@@ -158,19 +158,25 @@ public class KerbTrack : MonoBehaviour
         if (CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.Internal ||
             CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.IVA)
         {
-            label("IVA Pitch", pv);
-            label("IVA Yaw", yv);
-            label("IVA Roll", rv);
-
-            GUILayout.Label("Scale");
-            sliderScale("IVA Pitch", ref pitchScaleIVA);
-            sliderScale("IVA Yaw", ref yawScaleIVA);
-            sliderScale("IVA Roll", ref rollScaleIVA);
-
-            GUILayout.Label("Offset");
-            sliderOffset("IVA Pitch", ref pitchOffsetIVA);
-            sliderOffset("IVA Yaw", ref yawOffsetIVA);
-            sliderOffset("IVA Roll", ref rollOffsetIVA);
+        	if (tracker is IQuatTracker) {
+        		GUILayout.BeginHorizontal();
+        		GUILayout.Label("Tracker exports quaternions; rotation cannot be adjusted.");
+        		GUILayout.EndHorizontal();
+        	} else {
+	            label("IVA Pitch", pv);
+	            label("IVA Yaw", yv);
+	            label("IVA Roll", rv);
+				
+	            GUILayout.Label("Scale");
+	            sliderScale("IVA Pitch", ref pitchScaleIVA);
+	            sliderScale("IVA Yaw", ref yawScaleIVA);
+	            sliderScale("IVA Roll", ref rollScaleIVA);
+	
+	            GUILayout.Label("Offset");
+	            sliderOffset("IVA Pitch", ref pitchOffsetIVA);
+	            sliderOffset("IVA Yaw", ref yawOffsetIVA);
+	            sliderOffset("IVA Roll", ref rollOffsetIVA);
+        	}
 
             label("IVA Left-Right", xp);
             label("IVA Up-Down", yp);
@@ -389,10 +395,18 @@ public class KerbTrack : MonoBehaviour
 							xp = x * xScale + xOffset;
 							yp = y * yScale + yOffset;
 							zp = z * -zScale + zOffset;
-							InternalCamera.Instance.transform.localEulerAngles = new Vector3(
-								-Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
-								-Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
-								Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
+							// If tracker supports quaternions, use them directly.
+							var qtracker = tracker as IQuatTracker;
+							if (qtracker != null) {
+								var quat = InternalCamera.Instance.transform.localRotation;
+								qtracker.GetQuatData(ref quat);
+								InternalCamera.Instance.transform.localRotation = quat;
+							} else {
+								InternalCamera.Instance.transform.localEulerAngles = new Vector3(
+									-Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
+									-Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
+									Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
+							}
 							InternalCamera.Instance.transform.localPosition = new Vector3(
 								Mathf.Clamp(xp, xMinIVA, xMaxIVA),
 								Mathf.Clamp(yp, yMinIVA, yMaxIVA),
