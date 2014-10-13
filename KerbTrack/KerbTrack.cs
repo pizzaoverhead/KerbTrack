@@ -72,60 +72,64 @@ public class KerbTrack : MonoBehaviour
     }
 
 
-	void Start()
-	{
+    void Start()
+    {
         Debug.Log("KerbTrack: Starting");
-		GameEvents.onGamePause.Add(new EventVoid.OnEvent(OnPause));
-		GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
+        GameEvents.onGamePause.Add(new EventVoid.OnEvent(OnPause));
+        GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
         RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
-		LoadSettings();
+        LoadSettings();
         ChangeTracker((Trackers)activeTracker);
-	}
+    }
 
-	public void OnDestroy()
-	{
-		GameEvents.onGamePause.Remove(new EventVoid.OnEvent(OnPause));
-		GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(OnUnPause));
-		SaveSettings();
-	}
-    
-	#region GUI
+    public void OnDestroy()
+    {
+        GameEvents.onGamePause.Remove(new EventVoid.OnEvent(OnPause));
+        GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(OnUnPause));
+        SaveSettings();
+    }
 
-	public void OnPause()
-	{
-		guiVisible = true;
-	}
+    #region GUI
 
-	public void OnUnPause()
-	{
-		guiVisible = false;
-	}
+    public void OnPause()
+    {
+        guiVisible = true;
+    }
 
-	protected Rect windowPos = new Rect(Screen.width / 4, Screen.height / 4, 10f, 10f);
-	
-	private void slider(string label, ref float variable, float from, float to) {
-		GUILayout.BeginHorizontal();
-		GUILayout.Label(label + ": " + variable.ToString());
-		GUILayout.FlexibleSpace();
-		variable = GUILayout.HorizontalSlider(variable, from, to, GUILayout.Width(100));
-		GUILayout.EndHorizontal();
-	}
+    public void OnUnPause()
+    {
+        guiVisible = false;
+    }
 
-	private void sliderScale(string label, ref float variable) {
-		slider(label, ref variable, 0, 1);
-	}
+    protected Rect windowPos = new Rect(Screen.width / 4, Screen.height / 4, 10f, 10f);
 
-	private void sliderOffset(string label, ref float variable) {
-		slider(label, ref variable, -1, 1);
-	}
+    private void slider(string label, ref float variable, float from, float to)
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(label + ": " + variable.ToString());
+        GUILayout.FlexibleSpace();
+        variable = GUILayout.HorizontalSlider(variable, from, to, GUILayout.Width(100));
+        GUILayout.EndHorizontal();
+    }
 
-	private void label(string text, object obj) {
-		GUILayout.BeginHorizontal();
-		GUILayout.Label(text);
-		GUILayout.FlexibleSpace();
-		GUILayout.Label(obj.ToString(), GUILayout.Width(100));
-		GUILayout.EndHorizontal();
-	}
+    private void sliderScale(string label, ref float variable)
+    {
+        slider(label, ref variable, 0, 1);
+    }
+
+    private void sliderOffset(string label, ref float variable)
+    {
+        slider(label, ref variable, -1, 1);
+    }
+
+    private void label(string text, object obj)
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(text);
+        GUILayout.FlexibleSpace();
+        GUILayout.Label(obj.ToString(), GUILayout.Width(100));
+        GUILayout.EndHorizontal();
+    }
 
     private int radioButton(string[] labels, int selectedIndex)
     {
@@ -151,32 +155,35 @@ public class KerbTrack : MonoBehaviour
     {
         GUILayout.BeginVertical();
 
-        string statusText = (trackerEnabled ? "Enabled" : "Disabled") + 
+        string statusText = (trackerEnabled ? "Enabled" : "Disabled") +
             " (" + Enum.GetName(toggleEnabledKey.GetType(), toggleEnabledKey) + ")";
         GUILayout.Label(statusText);
 
         if (CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.Internal ||
             CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.IVA)
         {
-        	if (tracker is IQuatTracker) {
-        		GUILayout.BeginHorizontal();
-        		GUILayout.Label("Tracker exports quaternions; rotation cannot be adjusted.");
-        		GUILayout.EndHorizontal();
-        	} else {
-	            label("IVA Pitch", pv);
-	            label("IVA Yaw", yv);
-	            label("IVA Roll", rv);
-				
-	            GUILayout.Label("Scale");
-	            sliderScale("IVA Pitch", ref pitchScaleIVA);
-	            sliderScale("IVA Yaw", ref yawScaleIVA);
-	            sliderScale("IVA Roll", ref rollScaleIVA);
-	
-	            GUILayout.Label("Offset");
-	            sliderOffset("IVA Pitch", ref pitchOffsetIVA);
-	            sliderOffset("IVA Yaw", ref yawOffsetIVA);
-	            sliderOffset("IVA Roll", ref rollOffsetIVA);
-        	}
+            if (tracker is IQuatTracker)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Tracker exports quaternions; rotation cannot be adjusted.");
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                label("IVA Pitch", pv);
+                label("IVA Yaw", yv);
+                label("IVA Roll", rv);
+
+                GUILayout.Label("Scale");
+                sliderScale("IVA Pitch", ref pitchScaleIVA);
+                sliderScale("IVA Yaw", ref yawScaleIVA);
+                sliderScale("IVA Roll", ref rollScaleIVA);
+
+                GUILayout.Label("Offset");
+                sliderOffset("IVA Pitch", ref pitchOffsetIVA);
+                sliderOffset("IVA Yaw", ref yawOffsetIVA);
+                sliderOffset("IVA Roll", ref rollOffsetIVA);
+            }
 
             label("IVA Left-Right", xp);
             label("IVA Up-Down", yp);
@@ -210,6 +217,10 @@ public class KerbTrack : MonoBehaviour
         }
 
         GUILayout.Space(10);
+
+        mapTrackingEnabled = GUILayout.Toggle(mapTrackingEnabled, "Enabled in map view");
+        externalTrackingEnabled = GUILayout.Toggle(externalTrackingEnabled, "Enabled in external view");
+
         int oldTracker = activeTracker;
         activeTracker = radioButton(trackerNames, activeTracker);
         if (oldTracker != activeTracker)
@@ -219,69 +230,73 @@ public class KerbTrack : MonoBehaviour
         GUI.DragWindow();
     }
 
-	protected void drawGUI()
-	{
-		if (guiVisible)
-			windowPos = GUILayout.Window(-5234628, windowPos, mainGUI, "KerbTrack", GUILayout.Width(250), GUILayout.Height(50));
-	}
+    protected void drawGUI()
+    {
+        if (guiVisible)
+            windowPos = GUILayout.Window(-5234628, windowPos, mainGUI, "KerbTrack", GUILayout.Width(250), GUILayout.Height(50));
+    }
 
-	#endregion GUI
+    #endregion GUI
 
-	#region Persistence
+    #region Persistence
 
-	private ConfigNode settings;
-	public void SaveSettings()
-	{
+    private ConfigNode settings;
+    public void SaveSettings()
+    {
         Debug.Log("KerbTrack: Saving settings to " + savePath);
-		settings = new ConfigNode();
-		settings.name = "SETTINGS";
-		// Save all [KSPField] public floats by reflection
-		// foreach member field...
-		foreach (FieldInfo f in GetType().GetFields()) {
-			// if they're a [KSPField] float...
-			if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float))) {
-				// add them.
-				settings.AddValue(f.Name, f.GetValue(this));
-			}
-		}
+        settings = new ConfigNode();
+        settings.name = "SETTINGS";
+        // Save all [KSPField] public floats by reflection
+        // foreach member field...
+        foreach (FieldInfo f in GetType().GetFields())
+        {
+            // if they're a [KSPField] float...
+            if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float)))
+            {
+                // add them.
+                settings.AddValue(f.Name, f.GetValue(this));
+            }
+        }
         settings.AddValue("tracker", GetTrackerName((Trackers)activeTracker));
-		settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
-		settings.AddValue("resetOrientationKey", resetOrientationKey.ToString());
+        settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
+        settings.AddValue("resetOrientationKey", resetOrientationKey.ToString());
 
-		settings.Save(savePath);
-	}
+        settings.Save(savePath);
+    }
 
-	public void LoadSettings()
+    public void LoadSettings()
     {
         Debug.Log("KerbTrack: Loading settings from " + savePath);
-		settings = new ConfigNode();
-		settings = ConfigNode.Load(savePath);
+        settings = new ConfigNode();
+        settings = ConfigNode.Load(savePath);
 
-		if (settings != null)
-		{
-			// Load all [KSPField] public floats by reflection
-			// foreach member field...
-			foreach (FieldInfo f in GetType().GetFields()) {
-				// if they're a [KSPField] float...
-				if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float))) {
-					// load them from the settings file.
-					if (settings.HasValue(f.Name))
-						f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
-				}
+        if (settings != null)
+        {
+            // Load all [KSPField] public floats by reflection
+            // foreach member field...
+            foreach (FieldInfo f in GetType().GetFields())
+            {
+                // if they're a [KSPField] float...
+                if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float)))
+                {
+                    // load them from the settings file.
+                    if (settings.HasValue(f.Name))
+                        f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
+                }
             }
             if (settings.HasValue("tracker"))
             {
                 string t = settings.GetValue("tracker");
                 activeTracker = (int)Enum.Parse(typeof(Trackers), t, true);
             }
-            if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey = 
+            if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey =
                 (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
-            if (settings.HasValue("resetOrientationKey")) resetOrientationKey = 
+            if (settings.HasValue("resetOrientationKey")) resetOrientationKey =
                 (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("resetOrientationKey"));
-		}
-	}
+        }
+    }
 
-	#endregion Persistence
+    #endregion Persistence
 
     public int activeTracker = (int)Trackers.FreeTrack;
 
@@ -289,68 +304,72 @@ public class KerbTrack : MonoBehaviour
     public KeyCode toggleEnabledKey = KeyCode.ScrollLock;
     [KSPField]
     public KeyCode resetOrientationKey = KeyCode.Home;
-	[KSPField]
-	public float pitchScaleIVA = 0.3f, pitchOffsetIVA = 0.0f;
-	[KSPField]
-	public float yawScaleIVA = 0.3f, yawOffsetIVA = 0.0f;
-	[KSPField]
-	public float rollScaleIVA = 0.15f, rollOffsetIVA = 0.0f;
-	[KSPField]
-	public float xScale = 0.1f, xOffset = 0.0f;
-	[KSPField]
-	public float yScale = 0.1f, yOffset = 0.0f;
-	[KSPField]
-	public float zScale = 0.1f, zOffset = 0.0f;
-	[KSPField]
-	public float pitchScaleFlight = 0.01f;
-	[KSPField]
-	public float yawScaleFlight = 0.01f;
+    [KSPField]
+    public bool externalTrackingEnabled = true;
+    [KSPField]
+    public bool mapTrackingEnabled = true;
+    [KSPField]
+    public float pitchScaleIVA = 0.3f, pitchOffsetIVA = 0.0f;
+    [KSPField]
+    public float yawScaleIVA = 0.3f, yawOffsetIVA = 0.0f;
+    [KSPField]
+    public float rollScaleIVA = 0.15f, rollOffsetIVA = 0.0f;
+    [KSPField]
+    public float xScale = 0.1f, xOffset = 0.0f;
+    [KSPField]
+    public float yScale = 0.1f, yOffset = 0.0f;
+    [KSPField]
+    public float zScale = 0.1f, zOffset = 0.0f;
+    [KSPField]
+    public float pitchScaleFlight = 0.01f;
+    [KSPField]
+    public float yawScaleFlight = 0.01f;
 
-	// Ignore the built-in max/min values.
-	[KSPField]
-	public float pitchMaxIVA = 120f;
-	[KSPField]
-	public float pitchMinIVA = -90f;
-	[KSPField]
-	public float yawMaxIVA = 135f;
-	[KSPField]
-	public float yawMinIVA = -135f;
-	[KSPField]
-	public float rollMaxIVA = 90f;
-	[KSPField]
-	public float rollMinIVA = -90f;
-	[KSPField]
-	public float xMaxIVA = 0.15f;
-	[KSPField]
-	public float xMinIVA = -0.15f;
-	[KSPField]
-	public float yMaxIVA = 0.1f;
-	[KSPField]
-	public float yMinIVA = -0.1f;
-	[KSPField]
-	public float zMaxIVA = 0.1f;
-	[KSPField]
-	public float zMinIVA = -0.15f;
+    // Ignore the built-in max/min values.
+    [KSPField]
+    public float pitchMaxIVA = 120f;
+    [KSPField]
+    public float pitchMinIVA = -90f;
+    [KSPField]
+    public float yawMaxIVA = 135f;
+    [KSPField]
+    public float yawMinIVA = -135f;
+    [KSPField]
+    public float rollMaxIVA = 90f;
+    [KSPField]
+    public float rollMinIVA = -90f;
+    [KSPField]
+    public float xMaxIVA = 0.15f;
+    [KSPField]
+    public float xMinIVA = -0.15f;
+    [KSPField]
+    public float yMaxIVA = 0.1f;
+    [KSPField]
+    public float yMinIVA = -0.1f;
+    [KSPField]
+    public float zMaxIVA = 0.1f;
+    [KSPField]
+    public float zMinIVA = -0.15f;
 
     // Values after scaling.
-	public float pv = 0f;
-	public float yv = 0f;
-	public float rv = 0f;
-	public float xp = 0f;
-	public float yp = 0f;
-	public float zp = 0f;
-    
-	void Update()
-	{
-		if (Input.GetKeyDown(toggleEnabledKey))
-			trackerEnabled = !trackerEnabled;
+    public float pv = 0f;
+    public float yv = 0f;
+    public float rv = 0f;
+    public float xp = 0f;
+    public float yp = 0f;
+    public float zp = 0f;
+
+    void Update()
+    {
+        if (Input.GetKeyDown(toggleEnabledKey))
+            trackerEnabled = !trackerEnabled;
         if (Input.GetKeyDown(resetOrientationKey))
             tracker.ResetOrientation();
 
-		if (trackerEnabled)
-		{
-			if (tracker != null) 
-			{
+        if (trackerEnabled)
+        {
+            if (tracker != null)
+            {
                 Vector3 rot = new Vector3(0, 0, 0);
                 Vector3 pos = new Vector3(0, 0, 0);
                 try
@@ -368,64 +387,69 @@ public class KerbTrack : MonoBehaviour
                 float pitch = (float)rot.x;
                 float yaw = (float)rot.y;
                 float roll = (float)rot.z;
-				float x = pos.x;
-				float y = pos.y;
-				float z = pos.z;
+                float x = pos.x;
+                float y = pos.y;
+                float z = pos.z;
 
-				switch (CameraManager.Instance.currentCameraMode)
-				{
-					case CameraManager.CameraMode.External:
-						{
-							break;
-						}
-					case CameraManager.CameraMode.Flight:
-						{
-							FlightCamera.fetch.camPitch = -pitch * pitchScaleFlight;
-							FlightCamera.fetch.camHdg = -yaw * yawScaleFlight;
-							pv = pitch * pitchScaleFlight;
-							yv = yaw * yawScaleFlight;
-							break;
-						}
-					case CameraManager.CameraMode.Internal: // Window zoom cameras
-					case CameraManager.CameraMode.IVA: // Main IVA cameras
-						{
-							pv = pitch * pitchScaleIVA + pitchOffsetIVA;
-							yv = yaw * yawScaleIVA + yawOffsetIVA;
-							rv = roll * rollScaleIVA + rollOffsetIVA;
-							xp = x * xScale + xOffset;
-							yp = y * yScale + yOffset;
-							zp = z * -zScale + zOffset;
-							// If tracker supports quaternions, use them directly.
-							var qtracker = tracker as IQuatTracker;
-							if (qtracker != null) {
-								var quat = InternalCamera.Instance.transform.localRotation;
-								qtracker.GetQuatData(ref quat);
-								InternalCamera.Instance.transform.localRotation = quat;
-							} else {
-								InternalCamera.Instance.transform.localEulerAngles = new Vector3(
-									-Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
-									-Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
-									Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
-							}
-							InternalCamera.Instance.transform.localPosition = new Vector3(
-								Mathf.Clamp(xp, xMinIVA, xMaxIVA),
-								Mathf.Clamp(yp, yMinIVA, yMaxIVA),
-								Mathf.Clamp(zp, zMinIVA, zMaxIVA));
-							// Without setting the flight camera transform, the pod rotates about without changing the background.
-							FlightCamera.fetch.transform.rotation = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.rotation);
-							FlightCamera.fetch.transform.position = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.position);
-							break;
-						}
-					case CameraManager.CameraMode.Map:
-						{
-							PlanetariumCamera.fetch.camPitch = -pitch * pitchScaleFlight;
-							PlanetariumCamera.fetch.camHdg = -yaw * yawScaleFlight;
-							pv = pitch * pitchScaleFlight;
-							yv = yaw * yawScaleFlight;
-							break;
-						}
-				}
-			}
-		}
-	}
+                switch (CameraManager.Instance.currentCameraMode)
+                {
+                    case CameraManager.CameraMode.External:
+                        {
+                            break;
+                        }
+                    case CameraManager.CameraMode.Flight:
+                        {
+                            if (!externalTrackingEnabled) return;
+                            FlightCamera.fetch.camPitch = -pitch * pitchScaleFlight;
+                            FlightCamera.fetch.camHdg = -yaw * yawScaleFlight;
+                            pv = pitch * pitchScaleFlight;
+                            yv = yaw * yawScaleFlight;
+                            break;
+                        }
+                    case CameraManager.CameraMode.Internal: // Window zoom cameras
+                    case CameraManager.CameraMode.IVA: // Main IVA cameras
+                        {
+                            pv = pitch * pitchScaleIVA + pitchOffsetIVA;
+                            yv = yaw * yawScaleIVA + yawOffsetIVA;
+                            rv = roll * rollScaleIVA + rollOffsetIVA;
+                            xp = x * xScale + xOffset;
+                            yp = y * yScale + yOffset;
+                            zp = z * -zScale + zOffset;
+                            // If tracker supports quaternions, use them directly.
+                            var qtracker = tracker as IQuatTracker;
+                            if (qtracker != null)
+                            {
+                                var quat = InternalCamera.Instance.transform.localRotation;
+                                qtracker.GetQuatData(ref quat);
+                                InternalCamera.Instance.transform.localRotation = quat;
+                            }
+                            else
+                            {
+                                InternalCamera.Instance.transform.localEulerAngles = new Vector3(
+                                    -Mathf.Clamp(pv, pitchMinIVA, pitchMaxIVA),
+                                    -Mathf.Clamp(yv, yawMinIVA, yawMaxIVA),
+                                    Mathf.Clamp(rv, rollMinIVA, rollMaxIVA));
+                            }
+                            InternalCamera.Instance.transform.localPosition = new Vector3(
+                                Mathf.Clamp(xp, xMinIVA, xMaxIVA),
+                                Mathf.Clamp(yp, yMinIVA, yMaxIVA),
+                                Mathf.Clamp(zp, zMinIVA, zMaxIVA));
+                            // Without setting the flight camera transform, the pod rotates about without changing the background.
+                            FlightCamera.fetch.transform.rotation = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.rotation);
+                            FlightCamera.fetch.transform.position = InternalSpace.InternalToWorld(InternalCamera.Instance.transform.position);
+                            break;
+                        }
+                    case CameraManager.CameraMode.Map:
+                        {
+                            if (!mapTrackingEnabled) return;
+                            PlanetariumCamera.fetch.camPitch = -pitch * pitchScaleFlight;
+                            PlanetariumCamera.fetch.camHdg = -yaw * yawScaleFlight;
+                            pv = pitch * pitchScaleFlight;
+                            yv = yaw * yawScaleFlight;
+                            break;
+                        }
+                }
+            }
+        }
+    }
 }

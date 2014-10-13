@@ -1,9 +1,11 @@
-﻿using TrackIRUnity;
+﻿using System;
+using System.Reflection;
 using UnityEngine;
+using TrackIRUnity;
 
 class TrackIRTracker : ITracker
 {
-	TrackIRUnity.TrackIRClient trackIRclient;
+    TrackIRClient trackIRclient;
 
 	public TrackIRTracker()
     {
