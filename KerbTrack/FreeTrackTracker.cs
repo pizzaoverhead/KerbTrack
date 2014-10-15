@@ -35,44 +35,50 @@ class FreeTrackTracker : ITracker
     public static extern string FTProvider();
 #endif
 
-    public void GetData(ref Vector3 rot, ref Vector3 pos)
+
+    /* DaMichel: sometimes FaceTrackNoIR with the point tracker returns all zeros in
+     * the angles. I see no other way but to check the numbers and return the last
+     * "good" value. Therefore we store the last good value here. 
+     */
+    private Vector3 rot;
+    private Vector3 pos;
+
+    private void Update()
     {
         FreeTrackData trackData = new FreeTrackData();
         if (FTGetData(ref trackData))
         {
-            rot.x = trackData.Pitch * 100;
-            rot.y = trackData.Yaw * 100;
-            rot.z = trackData.Roll * 100;
-            pos.x = trackData.X / 100;
-            pos.y = trackData.Y / 100;
-            pos.z = trackData.Z / 100;
+            // additional check if something went wrong
+            if (!(trackData.RawPitch==0 && trackData.RawRoll==0 && trackData.RawYaw==0))
+            {
+                rot.x = trackData.Pitch * 100;
+                rot.y = trackData.Yaw * 100;
+                rot.z = trackData.Roll * 100;
+                pos.x = trackData.X / 100;
+                pos.y = trackData.Y / 100;
+                pos.z = trackData.Z / 100;
+            }
         }
     }
 
-	public Vector3d GetRotation()
-	{
-		Vector3d rot = new Vector3d(0, 0, 0);
-		FreeTrackData trackData = new FreeTrackData();
-		if (FTGetData(ref trackData))
-		{
-			rot.x = trackData.Pitch * 100;
-			rot.y = trackData.Yaw * 100;
-			rot.z = trackData.Roll * 100;
-		}
-		return rot;
-	}
-	public Vector3d GetPosition()
-	{
-		Vector3d pos = new Vector3d(0, 0, 0);
-		FreeTrackData trackData = new FreeTrackData();
-		if (FTGetData(ref trackData))
-		{
-			pos.x = trackData.X / 100;
-			pos.y = trackData.Y / 100;
-			pos.z = trackData.Z / 100;
-		}
-		return pos;
-	}
+    public void GetData(ref Vector3 rot_, ref Vector3 pos_)
+    {
+        Update();
+        rot_ = rot;
+        pos_ = pos;
+    }
+
+    // DaMichel: no code duplication.
+    public Vector3d GetRotation()
+    {
+        Update();
+        return rot;
+    }
+    public Vector3d GetPosition()
+    {
+        Update();
+        return pos;
+    }
 
     public void ResetOrientation() { }
 }
