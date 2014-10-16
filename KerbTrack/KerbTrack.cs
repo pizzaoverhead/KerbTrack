@@ -15,6 +15,7 @@
 using System;
 using System.Reflection;
 using UnityEngine;
+using KSP.IO;
 
 [KSPAddon(KSPAddon.Startup.Flight, false)]
 public class KerbTrack : MonoBehaviour
@@ -24,7 +25,7 @@ public class KerbTrack : MonoBehaviour
     public ITracker tracker;
 
     // [...]GameData\KerbTrack\Plugins\PluginData\KerbTrack\settings.cfg
-    private string savePath = AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)).Replace('/', '\\') + "/settings.cfg";
+    private string savePath = AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)).Replace('/', '\\') + "\\settings.cfg";
 
     public enum Trackers
     {
@@ -240,7 +241,7 @@ public class KerbTrack : MonoBehaviour
 
     #region Persistence
 
-    private ConfigNode settings;
+    ConfigNode settings = null;
     public void SaveSettings()
     {
         Debug.Log("KerbTrack: Saving settings to " + savePath);
@@ -260,6 +261,8 @@ public class KerbTrack : MonoBehaviour
         settings.AddValue("tracker", GetTrackerName((Trackers)activeTracker));
         settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
         settings.AddValue("resetOrientationKey", resetOrientationKey.ToString());
+        settings.AddValue("externalTrackingEnabled", externalTrackingEnabled.ToString());
+        settings.AddValue("mapTrackingEnabled", mapTrackingEnabled.ToString());
 
         settings.Save(savePath);
     }
@@ -284,6 +287,7 @@ public class KerbTrack : MonoBehaviour
                         f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
                 }
             }
+
             if (settings.HasValue("tracker"))
             {
                 string t = settings.GetValue("tracker");
@@ -293,6 +297,10 @@ public class KerbTrack : MonoBehaviour
                 (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
             if (settings.HasValue("resetOrientationKey")) resetOrientationKey =
                 (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("resetOrientationKey"));
+            if (settings.HasValue("externalTrackingEnabled"))
+                externalTrackingEnabled = Boolean.Parse(settings.GetValue("externalTrackingEnabled"));
+            if (settings.HasValue("mapTrackingEnabled"))
+                mapTrackingEnabled = Boolean.Parse(settings.GetValue("mapTrackingEnabled"));
         }
     }
 
