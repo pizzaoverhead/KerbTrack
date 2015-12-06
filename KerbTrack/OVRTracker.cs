@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-class OVRTracker : ITracker, IQuatTracker
+public class OVRTracker : ITracker, IQuatTracker
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct Vector3f

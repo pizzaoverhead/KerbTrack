@@ -1,9 +1,7 @@
-﻿using System;
-using System.Reflection;
+﻿using TrackIRUnity;
 using UnityEngine;
-using TrackIRUnity;
 
-class TrackIRTracker : ITracker
+public class TrackIRTracker : ITracker
 {
     TrackIRClient trackIRclient;
 
@@ -30,7 +28,7 @@ class TrackIRTracker : ITracker
         }
     }
 
-    public Vector3d GetRotation()
+    /*public Vector3d GetRotation()
     {
         Vector3d rot = new Vector3d(0, 0, 0);
         if (trackIRclient != null)
@@ -54,7 +52,7 @@ class TrackIRTracker : ITracker
             pos.z = data.fNPZ / 10000;
         }
         return pos;
-    }
+    }*/
 
     public void ResetOrientation() { }
 }

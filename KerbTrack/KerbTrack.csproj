@@ -69,7 +69,7 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External binaries\x86\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\Squad binaries\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -84,12 +84,15 @@
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\External binaries\x86\UnityEngine.dll</HintPath>
+      <HintPath>..\..\Squad binaries\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FreeTrackTracker.cs" />
+    <Compile Include="GuiUtils.cs" />
     <Compile Include="ITracker.cs" />
+    <Compile Include="JoystickAxis.cs" />
+    <Compile Include="JoystickTracker.cs" />
     <Compile Include="KerbTrack.cs" />
     <Compile Include="OVRTracker.cs">
       <SubType>Code</SubType>
