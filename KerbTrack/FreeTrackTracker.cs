@@ -35,43 +35,43 @@ class FreeTrackTracker : ITracker
     public static extern string FTProvider();
 #endif
 
-    public void GetData(ref Vector3 rot, ref Vector3 pos)
+    private Vector3 rotationState;
+    private Vector3 positionState;
+
+    private void GetRawData()
     {
         FreeTrackData trackData = new FreeTrackData();
         if (FTGetData(ref trackData))
         {
-            rot.x = trackData.Pitch * 100;
-            rot.y = trackData.Yaw * 100;
-            rot.z = trackData.Roll * 100;
-            pos.x = trackData.X / 100;
-            pos.y = trackData.Y / 100;
-            pos.z = trackData.Z / 100;
+            // FaceTrackNoIR occasionally returns values of all zero, causing jumping.
+            // Ignore zeroed values.
+            if (!(trackData.RawPitch == 0 && trackData.RawRoll == 0 && trackData.RawYaw == 0))
+            {
+                rotationState.x = trackData.Pitch * 100;
+                rotationState.y = trackData.Yaw * 100;
+                rotationState.z = trackData.Roll * 100;
+                positionState.x = trackData.X / 100;
+                positionState.y = trackData.Y / 100;
+                positionState.z = trackData.Z / 100;
+            }
         }
+    }
+    public void GetData(ref Vector3 rot, ref Vector3 pos)
+    {
+        GetRawData();
+        rot = rotationState;
+        pos = positionState;
     }
 
     public Vector3d GetRotation()
     {
-        Vector3d rot = new Vector3d(0, 0, 0);
-        FreeTrackData trackData = new FreeTrackData();
-        if (FTGetData(ref trackData))
-        {
-            rot.x = trackData.Pitch * 100;
-            rot.y = trackData.Yaw * 100;
-            rot.z = trackData.Roll * 100;
-        }
-        return rot;
+        GetRawData();
+        return rotationState;
     }
     public Vector3d GetPosition()
     {
-        Vector3d pos = new Vector3d(0, 0, 0);
-        FreeTrackData trackData = new FreeTrackData();
-        if (FTGetData(ref trackData))
-        {
-            pos.x = trackData.X / 100;
-            pos.y = trackData.Y / 100;
-            pos.z = trackData.Z / 100;
-        }
-        return pos;
+        GetRawData();
+        return positionState;
     }
 
     public void ResetOrientation() { }
