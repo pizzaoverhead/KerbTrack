@@ -69,7 +69,7 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Squad binaries\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\Squad binaries\x64\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -84,7 +84,7 @@
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Squad binaries\UnityEngine.dll</HintPath>
+      <HintPath>..\..\Squad binaries\x64\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -102,7 +102,11 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /y "$(TargetPath)" "C:\Games\Kerbal Space Program\GameData\KerbTrack\Plugins\"</PostBuildEvent>
+    <PostBuildEvent>"C:\dev\KSP\pdb2mdb\pdb2mdb.exe" "$(TargetPath)"
+xcopy /y "$(TargetPath)" "C:\Games\Kerbal Space Program\GameData\$(ProjectName)\Plugins\"
+xcopy /y "$(TargetDir)$(TargetName).pdb" "C:\Games\Kerbal Space Program\GameData\$(ProjectName)\Plugins\"
+xcopy /y "$(TargetDir)$(TargetName).dll.mdb" "C:\Games\Kerbal Space Program\GameData\$(ProjectName)\Plugins\"
+taskkill /IM tail.exe /F 2&gt;&amp;1 | exit /B 0</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

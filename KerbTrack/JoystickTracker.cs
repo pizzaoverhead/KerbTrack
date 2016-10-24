@@ -8,7 +8,7 @@ public class JoystickTracker : ITracker
 {
     public JoystickTracker()
     {
-        Debug.Log("KerbTrack: Initialising Joystick tracker...");
+        Debug.Log("[KerbTrack] Initialising Joystick tracker...");
         string[] joysticks = Input.GetJoystickNames();
         Debug.Log("Joysticks available: ");
         for (int i = 0; i < joysticks.Length; i++)

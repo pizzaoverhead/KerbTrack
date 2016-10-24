@@ -7,10 +7,14 @@ public class TrackIRTracker : ITracker
 
     public TrackIRTracker()
     {
-        Debug.Log("KerbTrack: Initialising TrackIR...");
+        Debug.Log("[KerbTrack] Initialising TrackIR...");
         trackIRclient = new TrackIRUnity.TrackIRClient();
-        string status = trackIRclient.TrackIR_Enhanced_Init();
-        Debug.Log("KerbTrack: TrackIR status: " + status);
+        string status;
+        if (trackIRclient == null)
+            status = "Failed to start.";
+        else
+            status = trackIRclient.TrackIR_Enhanced_Init();
+        Debug.Log("[KerbTrack] TrackIR status: " + status);
     }
 
     public void GetData(ref Vector3 rot, ref Vector3 pos)

@@ -47,19 +47,19 @@ public class KerbTrack : MonoBehaviour
             {
                 case Trackers.FreeTrack:
                     {
-                        Debug.Log("KerbTrack: Using FreeTrack");
+                        Debug.Log("[KerbTrack] Using FreeTrack");
                         tracker = new FreeTrackTracker();
                         break;
                     }
                 case Trackers.TrackIR:
                     {
-                        Debug.Log("KerbTrack: Using TrackIR");
+                        Debug.Log("[KerbTrack] Using TrackIR");
                         tracker = new TrackIRTracker();
                         break;
                     }
                 case Trackers.OculusRift:
                     {
-                        Debug.Log("KerbTrack: Using Oculus Rift");
+                        Debug.Log("[KerbTrack] Using Oculus Rift");
                         tracker = new OVRTracker();
                         break;
                     }
@@ -81,10 +81,9 @@ public class KerbTrack : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("KerbTrack: Starting");
+        Debug.Log("[KerbTrack] Starting");
         GameEvents.onGamePause.Add(new EventVoid.OnEvent(OnPause));
         GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
-        RenderingManager.AddToPostDrawQueue(3, new Callback(drawGUI));
         LoadSettings();
         ChangeTracker((Trackers)activeTracker);
     }
@@ -105,7 +104,7 @@ public class KerbTrack : MonoBehaviour
 
     public void OnUnPause()
     {
-        //guiVisible = false;
+        guiVisible = false;
     }
 
     protected Rect windowPos = new Rect(Screen.width / 4, Screen.height / 4, 10f, 10f);
@@ -143,7 +142,7 @@ public class KerbTrack : MonoBehaviour
         GUI.DragWindow();
     }
 
-    protected void drawGUI()
+    public void OnGUI()
     {
         if (guiVisible)
             windowPos = GUILayout.Window(-5234628, windowPos, mainGUI, "KerbTrack", GUILayout.Width(250), GUILayout.Height(50));
@@ -344,7 +343,7 @@ public class KerbTrack : MonoBehaviour
     ConfigNode settings = null;
     public void SaveSettings()
     {
-        Debug.Log("KerbTrack: Saving settings to " + savePath);
+        Debug.Log("[KerbTrack] Saving settings to " + savePath);
         settings = new ConfigNode();
         settings.name = "SETTINGS";
         // Save all [KSPField] public floats by reflection
@@ -547,7 +546,7 @@ public class KerbTrack : MonoBehaviour
                 }
                 catch (Exception e)
                 {
-                    Debug.Log("KerbTrack: " + GetTrackerName((Trackers)activeTracker) + " error: " + e.Message + "\n" + e.StackTrace);
+                    Debug.Log("[KerbTrack] " + GetTrackerName((Trackers)activeTracker) + " error: " + e.Message + "\n" + e.StackTrace);
                     trackerEnabled = false;
                     return;
                 }

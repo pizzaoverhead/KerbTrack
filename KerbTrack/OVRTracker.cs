@@ -40,10 +40,10 @@ public class OVRTracker : ITracker, IQuatTracker
 
     public OVRTracker()
     {
-        Debug.Log("KerbTrack: Initialising OVR...");
+        Debug.Log("[KerbTrack] Initialising OVR...");
         wrapper = wrapper_init();
         wrapper_start_sensor(wrapper);
-        Debug.Log("KerbTrack: OVR initialised");
+        Debug.Log("[KerbTrack] OVR initialised");
     }
 
     public void GetData(ref Vector3 rot, ref Vector3 pos)
