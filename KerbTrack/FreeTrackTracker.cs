@@ -50,9 +50,9 @@ class FreeTrackTracker : ITracker
                 rotationState.x = trackData.Pitch * 100;
                 rotationState.y = trackData.Yaw * 100;
                 rotationState.z = trackData.Roll * 100;
-                positionState.x = trackData.X / 100;
-                positionState.y = trackData.Y / 100;
-                positionState.z = trackData.Z / 100;
+                positionState.x = trackData.X / 1000;
+                positionState.y = trackData.Y / 1000;
+                positionState.z = trackData.Z / 1000;
             }
         }
     }

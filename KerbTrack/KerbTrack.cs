@@ -16,526 +16,300 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-[KSPAddon(KSPAddon.Startup.Flight, false)]
-public class KerbTrack : MonoBehaviour
+namespace KerbTrack
 {
-    public bool guiVisible = false;
-    public bool trackerEnabled = true;
-    public ITracker tracker;
-
-    // [...]GameData\KerbTrack\Plugins\PluginData\KerbTrack\settings.cfg
-    private string savePath = AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)).Replace("/", @"\\") + @"\\settings.cfg";
-
-    public enum Trackers
+    [KSPAddon(KSPAddon.Startup.Flight, false)]
+    public class KerbTrack : MonoBehaviour
     {
-        FreeTrack = 0,
-        TrackIR = 1,
-        OculusRift = 2,
-        Joystick = 3
-    }
+        public static bool trackerEnabled = true;
+        public static ITracker tracker;
 
-    public string GetTrackerName(Trackers t)
-    {
-        return Enum.GetName(t.GetType(), t);
-    }
+        // [...]GameData\KerbTrack\Plugins\PluginData\KerbTrack\settings.cfg
+        private string savePath = AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)).Replace("/", @"\\") + @"\\settings.cfg";
 
-    public void ChangeTracker(Trackers t)
-    {
-        try
+        public string GetTrackerName(Enums.Trackers t)
         {
-            switch (t)
+            return Enum.GetName(t.GetType(), t);
+        }
+
+        public static void ChangeTracker(Enums.Trackers t)
+        {
+            try
             {
-                case Trackers.FreeTrack:
-                    {
-                        Debug.Log("[KerbTrack] Using FreeTrack");
-                        tracker = new FreeTrackTracker();
-                        break;
-                    }
-                case Trackers.TrackIR:
-                    {
-                        Debug.Log("[KerbTrack] Using TrackIR");
-                        tracker = new TrackIRTracker();
-                        break;
-                    }
-                case Trackers.OculusRift:
-                    {
-                        Debug.Log("[KerbTrack] Using Oculus Rift");
-                        tracker = new OVRTracker();
-                        break;
-                    }
-                case Trackers.Joystick:
-                    {
-                        Debug.Log("KerbTrack: Using Joystick");
-                        tracker = new JoystickTracker();
-                        break;
-                    }
+                switch (t)
+                {
+                    case Enums.Trackers.FreeTrack:
+                        {
+                            Debug.Log("[KerbTrack] Using FreeTrack");
+                            tracker = new FreeTrackTracker();
+                            break;
+                        }
+                    case Enums.Trackers.TrackIR:
+                        {
+                            Debug.Log("[KerbTrack] Using TrackIR");
+                            tracker = new TrackIRTracker();
+                            break;
+                        }
+                    case Enums.Trackers.OculusRift:
+                        {
+                            Debug.Log("[KerbTrack] Using Oculus Rift");
+                            tracker = new OVRTracker();
+                            break;
+                        }
+                    case Enums.Trackers.Joystick:
+                        {
+                            Debug.Log("KerbTrack: Using Joystick");
+                            tracker = new JoystickTracker();
+                            break;
+                        }
+                }
+            }
+            catch (Exception)
+            {
+                trackerEnabled = false;
+                throw;
             }
         }
-        catch (Exception)
+
+
+        void Start()
         {
-            trackerEnabled = false;
-            throw;
-        }
-    }
-
-
-    void Start()
-    {
-        Debug.Log("[KerbTrack] Starting");
-        GameEvents.onGamePause.Add(new EventVoid.OnEvent(OnPause));
-        GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
-        LoadSettings();
-        ChangeTracker((Trackers)activeTracker);
-    }
-
-    public void OnDestroy()
-    {
-        GameEvents.onGamePause.Remove(new EventVoid.OnEvent(OnPause));
-        GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(OnUnPause));
-        SaveSettings();
-    }
-
-    #region GUI
-
-    public void OnPause()
-    {
-        guiVisible = true;
-    }
-
-    public void OnUnPause()
-    {
-        guiVisible = false;
-    }
-
-    protected Rect windowPos = new Rect(Screen.width / 4, Screen.height / 4, 10f, 10f);
-
-    private static string[] trackerNames = Enum.GetNames(typeof(Trackers));
-
-    private void mainGUI(int windowID)
-    {
-        GUILayout.BeginVertical();
-
-        string statusText = (trackerEnabled ? "Enabled" : "Disabled") +
-            " (" + Enum.GetName(toggleEnabledKey.GetType(), toggleEnabledKey) + ")";
-        GUILayout.Label(statusText);
-
-        //if (activeTracker == (int)Trackers.Joystick)
-
-        JoystickGui();
-        IvaGui();
-        FlightGui();
-
-        /*if (CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.Internal ||
-            CameraManager.Instance.currentCameraMode == CameraManager.CameraMode.IVA)*/
-
-        GUILayout.Space(10);
-
-        mapTrackingEnabled = GUILayout.Toggle(mapTrackingEnabled, "Enabled in map view");
-        externalTrackingEnabled = GUILayout.Toggle(externalTrackingEnabled, "Enabled in external view");
-
-        int oldTracker = activeTracker;
-        activeTracker = GuiUtils.RadioButton(trackerNames, activeTracker);
-        if (oldTracker != activeTracker)
-            ChangeTracker((Trackers)activeTracker);
-
-        GUILayout.EndVertical();
-        GUI.DragWindow();
-    }
-
-    public void OnGUI()
-    {
-        if (guiVisible)
-            windowPos = GUILayout.Window(-5234628, windowPos, mainGUI, "KerbTrack", GUILayout.Width(250), GUILayout.Height(50));
-    }
-
-    private bool _showIvaGui = false;
-    private void IvaGui()
-    {
-        string buttonText = _showIvaGui ? "Hide IVA config" : "Show IVA config";
-        if (GUILayout.Button(buttonText))
-            _showIvaGui = !_showIvaGui;
-        if (!_showIvaGui) return;
-
-        if (tracker is IQuatTracker)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("This tracker's rotation cannot be adjusted.");
-            GUILayout.EndHorizontal();
-        }
-        else
-        {
-            GuiUtils.LabelValue("IVA Pitch", pv);
-            GuiUtils.LabelValue("IVA Yaw", yv);
-            GuiUtils.LabelValue("IVA Roll", rv);
-
-            GUILayout.Label("<b>Scale</b>");
-            GuiUtils.SliderScale("IVA Pitch", ref pitchScaleIVA);
-            GuiUtils.SliderScale("IVA Yaw", ref yawScaleIVA);
-            GuiUtils.SliderScale("IVA Roll", ref rollScaleIVA);
-
-            GUILayout.Label("<b>Offset</b>");
-            GuiUtils.SliderOffset("IVA Pitch", ref pitchOffsetIVA);
-            GuiUtils.SliderOffset("IVA Yaw", ref yawOffsetIVA);
-            GuiUtils.SliderOffset("IVA Roll", ref rollOffsetIVA);
+            Debug.Log("[KerbTrack] Starting");
+            GameEvents.onGamePause.Add(new EventVoid.OnEvent(OnPause));
+            GameEvents.onGameUnpause.Add(new EventVoid.OnEvent(OnUnPause));
+            LoadSettings();
+            ChangeTracker((Enums.Trackers)activeTracker);
         }
 
-        GuiUtils.LabelValue("IVA Left-Right", xp);
-        GuiUtils.LabelValue("IVA Up-Down", yp);
-        GuiUtils.LabelValue("IVA In-Out", zp);
-
-        GUILayout.Label("<b>Scale</b>");
-        GuiUtils.SliderScale("Left/Right (X)", ref xScale);
-        GuiUtils.SliderScale("Up/Down (Y)", ref yScale);
-        GuiUtils.SliderScale("In/Out (Z)", ref zScale);
-
-        GUILayout.Label("<b>Offset</b>");
-        GuiUtils.Slider("Left/Right (X)", ref xOffset, xMinIVA, xMaxIVA);
-        GuiUtils.Slider("Up/Down (Y)", ref yOffset, yMinIVA, yMaxIVA);
-        GuiUtils.Slider("In/Out (Z)", ref zOffset, zMinIVA, zMaxIVA);
-    }
-
-    private bool _showFlightGui = false;
-    private void FlightGui()
-    {
-        string buttonText = _showFlightGui ? "Hide flight config" : "Show flight config";
-        if (GUILayout.Button(buttonText))
-            _showFlightGui = !_showFlightGui;
-
-        if (!_showFlightGui) return;
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Flight Pitch");
-        GUILayout.Label(pv.ToString());
-        GUILayout.EndHorizontal();
-        GUILayout.Label(pitchScaleFlight.ToString());
-        pitchScaleFlight = GUILayout.HorizontalSlider(pitchScaleFlight, 0, 1);
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Flight Yaw");
-        GUILayout.Label(yv.ToString());
-        GUILayout.EndHorizontal();
-        GUILayout.Label(yawScaleFlight.ToString());
-        yawScaleFlight = GUILayout.HorizontalSlider(yawScaleFlight, 0, 1);
-    }
-
-    private bool _showJoystickGui = false;
-    private void JoystickGui()
-    {
-        string buttonText = _showJoystickGui ? "Hide joystick config" : "Show joystick config";
-        if (GUILayout.Button(buttonText))
-            _showJoystickGui = !_showJoystickGui;
-
-        if (!_showJoystickGui) return;
-
-        string[] joysticks = Input.GetJoystickNames();
-        if (joysticks.Length == 0)
+        public void OnDestroy()
         {
-            GUILayout.Label("<b>No joysticks detected!</b>");
-            return;
+            GameEvents.onGamePause.Remove(new EventVoid.OnEvent(OnPause));
+            GameEvents.onGameUnpause.Remove(new EventVoid.OnEvent(OnUnPause));
+            SaveSettings();
         }
 
-        // Joystick selection.
-        if (joystickId >= joysticks.Length)
-            joystickId = 0;
-        GUILayout.Label("Active joystick");
-        GUILayout.Label(joystickId + " - " + joysticks[joystickId]);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous joystick"))
-            joystickId--;
-        if (GUILayout.Button("Next joystick"))
-            joystickId++;
-        GUILayout.EndHorizontal();
-        if (joystickId >= joysticks.Length)
-            joystickId = 0;
-        if (joystickId < 0)
-            joystickId = joysticks.Length - 1;
-        GUILayout.Space(10);
+        #region GUI
 
-        int maxAxisNum = 19;
-
-        // Pitch axis selection.
-        string pitchLabel = joyPitchAxisId == -1 ? "Disabled" : joyPitchAxisId.ToString();
-        GuiUtils.LabelValue("Pitch axis", pitchLabel);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous pitch axis"))
-            joyPitchAxisId--;
-        if (GUILayout.Button("Next pitch axis"))
-            joyPitchAxisId++;
-        joyPitchInverted = GUILayout.Toggle(joyPitchInverted, "Inverted");
-        GUILayout.EndHorizontal();
-        GUILayout.Space(10);
-
-        if (joyPitchAxisId > maxAxisNum)
-            joyPitchAxisId = 0;
-        if (joyPitchAxisId < -1)
-            joyPitchAxisId = maxAxisNum;
-
-        // Yaw axis selection.
-        string yawLabel = joyYawAxisId == -1 ? "Disabled" : joyYawAxisId.ToString();
-        GuiUtils.LabelValue("Yaw axis", yawLabel);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous yaw axis"))
-            joyYawAxisId--;
-        if (GUILayout.Button("Next yaw axis"))
-            joyYawAxisId++;
-        joyYawInverted = GUILayout.Toggle(joyYawInverted, "Inverted");
-        GUILayout.EndHorizontal();
-        GUILayout.Space(10);
-
-        if (joyYawAxisId > maxAxisNum)
-            joyYawAxisId = 0;
-        if (joyYawAxisId < -1)
-            joyYawAxisId = maxAxisNum;
-
-        // Roll axis selection.
-        string rollLabel = joyRollAxisId == -1 ? "Disabled" : joyRollAxisId.ToString();
-        GuiUtils.LabelValue("Roll axis", rollLabel);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous roll axis"))
-            joyRollAxisId--;
-        if (GUILayout.Button("Next roll axis"))
-            joyRollAxisId++;
-        joyRollInverted = GUILayout.Toggle(joyRollInverted, "Inverted");
-        GUILayout.EndHorizontal();
-        GUILayout.Space(10);
-        if (joyRollAxisId > maxAxisNum)
-            joyRollAxisId = 0;
-        if (joyRollAxisId < -1)
-            joyRollAxisId = maxAxisNum;
-
-        // Flight camera orbit axis selection.
-        string camOrbitLabel = joyCamOrbitAxisId == -1 ? "Disabled" : joyCamOrbitAxisId.ToString();
-        GuiUtils.LabelValue("Flight camera orbit axis", camOrbitLabel);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous orbit axis"))
-            joyCamOrbitAxisId--;
-        if (GUILayout.Button("Next orbit axis"))
-            joyCamOrbitAxisId++;
-        joyCamOrbitInverted = GUILayout.Toggle(joyCamOrbitInverted, "Inverted");
-        GUILayout.EndHorizontal();
-        GUILayout.Space(10);
-        if (joyCamOrbitAxisId > maxAxisNum)
-            joyCamOrbitAxisId = 0;
-        if (joyCamOrbitAxisId < -1)
-            joyCamOrbitAxisId = maxAxisNum;
-
-        // Flight camera pitch axis selection.
-        string camPitchLabel = joyCamPitchAxisId == -1 ? "Disabled" : joyCamPitchAxisId.ToString();
-        GuiUtils.LabelValue("Flight camera pitch axis", camPitchLabel);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Previous cam pitch axis"))
-            joyCamPitchAxisId--;
-        if (GUILayout.Button("Next cam pitch axis"))
-            joyCamPitchAxisId++;
-        joyRollInverted = GUILayout.Toggle(joyRollInverted, "Inverted");
-        GUILayout.EndHorizontal();
-        GUILayout.Space(10);
-        if (joyCamPitchAxisId > maxAxisNum)
-            joyCamPitchAxisId = 0;
-        if (joyCamPitchAxisId < -1)
-            joyCamPitchAxisId = maxAxisNum;
-    }
-
-    #endregion GUI
-
-    #region Persistence
-
-    ConfigNode settings = null;
-    public void SaveSettings()
-    {
-        Debug.Log("[KerbTrack] Saving settings to " + savePath);
-        settings = new ConfigNode();
-        settings.name = "SETTINGS";
-        // Save all [KSPField] public floats by reflection
-        // foreach member field...
-        foreach (FieldInfo f in GetType().GetFields())
+        public void OnPause()
         {
-            // if they're a [KSPField] float...
-            if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float)))
-            {
-                // add them.
-                settings.AddValue(f.Name, f.GetValue(this));
-            }
+            KerbTrackGui.guiVisible = true;
         }
-        settings.AddValue("tracker", GetTrackerName((Trackers)activeTracker));
-        settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
-        settings.AddValue("resetOrientationKey", resetOrientationKey.ToString());
-        settings.AddValue("externalTrackingEnabled", externalTrackingEnabled.ToString());
-        settings.AddValue("mapTrackingEnabled", mapTrackingEnabled.ToString());
 
-        settings.AddValue("joystickId", joystickId.ToString());
-        settings.AddValue("joypitchAxisId", joyPitchAxisId.ToString());
-        settings.AddValue("joyPitchInverted", joyPitchInverted.ToString());
-        settings.AddValue("joyyawAxisId", joyYawAxisId.ToString());
-        settings.AddValue("joyYawInverted", joyYawInverted.ToString());
-        settings.AddValue("joyrollAxisId", joyRollAxisId.ToString());
-        settings.AddValue("joyRollInverted", joyRollInverted.ToString());
-        settings.AddValue("joyCamPitchAxisId", joyCamPitchAxisId.ToString());
-        settings.AddValue("joyCamPitchInverted", joyCamPitchInverted.ToString());
-        settings.AddValue("joyCamOrbitAxisId", joyCamOrbitAxisId.ToString());
-        settings.AddValue("joyCamOrbitInverted", joyCamOrbitInverted.ToString());
-
-        settings.Save(savePath);
-    }
-
-    public void LoadSettings()
-    {
-        Debug.Log("KerbTrack: Loading settings from " + savePath);
-        settings = new ConfigNode();
-        settings = ConfigNode.Load(savePath);
-
-        if (settings != null)
+        public void OnUnPause()
         {
-            // Load all [KSPField] public floats by reflection
+            KerbTrackGui.guiVisible = false;
+        }
+
+        public void OnGUI()
+        {
+            KerbTrackGui.OnGUI(GetInstanceID());
+        }
+
+        #endregion GUI
+
+        #region Persistence
+
+        ConfigNode settings = null;
+        public void SaveSettings()
+        {
+            Debug.Log("[KerbTrack] Saving settings to " + savePath);
+            settings = new ConfigNode();
+            settings.name = "SETTINGS";
+            // Save all [KSPField] public floats by reflection
             // foreach member field...
             foreach (FieldInfo f in GetType().GetFields())
             {
                 // if they're a [KSPField] float...
                 if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float)))
                 {
-                    // load them from the settings file.
-                    if (settings.HasValue(f.Name))
-                        f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
+                    // add them.
+                    settings.AddValue(f.Name, f.GetValue(this));
                 }
             }
+            settings.AddValue("tracker", GetTrackerName((Enums.Trackers)activeTracker));
+            settings.AddValue("toggleEnabledKey", toggleEnabledKey.ToString());
+            settings.AddValue("resetOrientationKey", resetOrientationKey.ToString());
+            settings.AddValue("externalTrackingEnabled", externalTrackingEnabled.ToString());
+            settings.AddValue("mapTrackingEnabled", mapTrackingEnabled.ToString());
 
-            if (settings.HasValue("tracker"))
-            {
-                string t = settings.GetValue("tracker");
-                activeTracker = (int)Enum.Parse(typeof(Trackers), t, true);
-            }
-            if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey =
-                (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
-            if (settings.HasValue("resetOrientationKey")) resetOrientationKey =
-                (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("resetOrientationKey"));
-            if (settings.HasValue("externalTrackingEnabled"))
-                externalTrackingEnabled = Boolean.Parse(settings.GetValue("externalTrackingEnabled"));
-            if (settings.HasValue("mapTrackingEnabled"))
-                mapTrackingEnabled = Boolean.Parse(settings.GetValue("mapTrackingEnabled"));
+            settings.AddValue("joystickId", joystickId.ToString());
+            settings.AddValue("joypitchAxisId", joyPitchAxisId.ToString());
+            settings.AddValue("joyPitchInverted", joyPitchInverted.ToString());
+            settings.AddValue("joyyawAxisId", joyYawAxisId.ToString());
+            settings.AddValue("joyYawInverted", joyYawInverted.ToString());
+            settings.AddValue("joyrollAxisId", joyRollAxisId.ToString());
+            settings.AddValue("joyRollInverted", joyRollInverted.ToString());
+            settings.AddValue("joyCamPitchAxisId", joyCamPitchAxisId.ToString());
+            settings.AddValue("joyCamPitchInverted", joyCamPitchInverted.ToString());
+            settings.AddValue("joyCamOrbitAxisId", joyCamOrbitAxisId.ToString());
+            settings.AddValue("joyCamOrbitInverted", joyCamOrbitInverted.ToString());
 
-            if (settings.HasValue("joystickId"))
-                joystickId = Int32.Parse(settings.GetValue("joystickId"));
-            if (settings.HasValue("joyPitchAxisId"))
-                joyPitchAxisId = Int32.Parse(settings.GetValue("joyPitchAxisId"));
-            if (settings.HasValue("joyPitchInverted"))
-                joyPitchInverted = Boolean.Parse(settings.GetValue("joyPitchInverted"));
-            if (settings.HasValue("joyYawAxisId"))
-                joyYawAxisId = Int32.Parse(settings.GetValue("joyYawAxisId"));
-            if (settings.HasValue("joyYawInverted"))
-                joyYawInverted = Boolean.Parse(settings.GetValue("joyYawInverted"));
-            if (settings.HasValue("joyRollAxisId"))
-                joyRollAxisId = Int32.Parse(settings.GetValue("joyRollAxisId"));
-            if (settings.HasValue("joyRollInverted"))
-                joyRollInverted = Boolean.Parse(settings.GetValue("joyRollInverted"));
-            if (settings.HasValue("joyCamPitchAxisId"))
-                joyCamPitchAxisId = Int32.Parse(settings.GetValue("joyCamPitchAxisId"));
-            if (settings.HasValue("joyCamPitchInverted"))
-                joyCamPitchInverted = Boolean.Parse(settings.GetValue("joyCamPitchInverted"));
-            if (settings.HasValue("joyCamOrbitAxisId"))
-                joyCamOrbitAxisId = Int32.Parse(settings.GetValue("joyCamOrbitAxisId"));
-            if (settings.HasValue("joyCamOrbitInverted"))
-                joyCamOrbitInverted = Boolean.Parse(settings.GetValue("joyCamOrbitInverted"));
+            settings.Save(savePath);
         }
-    }
 
-    #endregion Persistence
-
-    public int activeTracker = (int)Trackers.FreeTrack;
-
-    [KSPField]
-    public KeyCode toggleEnabledKey = KeyCode.ScrollLock;
-    [KSPField]
-    public KeyCode resetOrientationKey = KeyCode.Home;
-    [KSPField]
-    public bool externalTrackingEnabled = true;
-    [KSPField]
-    public bool mapTrackingEnabled = true;
-
-    [KSPField]
-    public static int joystickId = 0;
-    [KSPField]
-    public static int joyPitchAxisId = 1;
-    [KSPField]
-    public static bool joyPitchInverted = false;
-    [KSPField]
-    public static int joyYawAxisId = 0;
-    [KSPField]
-    public static bool joyYawInverted = true;
-    [KSPField]
-    public static int joyRollAxisId = -1;
-    [KSPField]
-    public static bool joyRollInverted = false;
-    [KSPField]
-    public static int joyCamPitchAxisId = -1;
-    [KSPField]
-    public static bool joyCamPitchInverted = false;
-    [KSPField]
-    public static int joyCamOrbitAxisId = -1;
-    [KSPField]
-    public static bool joyCamOrbitInverted = false;
-
-    [KSPField]
-    public float pitchScaleIVA = 0.3f, pitchOffsetIVA = 0.0f;
-    [KSPField]
-    public float yawScaleIVA = 0.3f, yawOffsetIVA = 0.0f;
-    [KSPField]
-    public float rollScaleIVA = 0.15f, rollOffsetIVA = 0.0f;
-    [KSPField]
-    public float xScale = 0.1f, xOffset = 0.0f;
-    [KSPField]
-    public float yScale = 0.1f, yOffset = 0.0f;
-    [KSPField]
-    public float zScale = 0.1f, zOffset = 0.0f;
-    [KSPField]
-    public float pitchScaleFlight = 0.01f;
-    [KSPField]
-    public float yawScaleFlight = 0.01f;
-
-    // Ignore the built-in max/min values.
-    [KSPField]
-    public float pitchMaxIVA = 120f;
-    [KSPField]
-    public float pitchMinIVA = -90f;
-    [KSPField]
-    public float yawMaxIVA = 135f;
-    [KSPField]
-    public float yawMinIVA = -135f;
-    [KSPField]
-    public float rollMaxIVA = 90f;
-    [KSPField]
-    public float rollMinIVA = -90f;
-    [KSPField]
-    public float xMaxIVA = 0.15f;
-    [KSPField]
-    public float xMinIVA = -0.15f;
-    [KSPField]
-    public float yMaxIVA = 0.1f;
-    [KSPField]
-    public float yMinIVA = -0.1f;
-    [KSPField]
-    public float zMaxIVA = 0.1f;
-    [KSPField]
-    public float zMinIVA = -0.15f;
-
-    // Values after scaling.
-    public float pv = 0f;
-    public float yv = 0f;
-    public float rv = 0f;
-    public float xp = 0f;
-    public float yp = 0f;
-    public float zp = 0f;
-
-    Quaternion lastRotation = Quaternion.identity;
-
-    void Update()
-    {
-        if (Input.GetKeyDown(toggleEnabledKey))
-            trackerEnabled = !trackerEnabled;
-        if (Input.GetKeyDown(resetOrientationKey))
-            tracker.ResetOrientation();
-
-        if (trackerEnabled)
+        public void LoadSettings()
         {
+            Debug.Log("KerbTrack: Loading settings from " + savePath);
+            settings = new ConfigNode();
+            settings = ConfigNode.Load(savePath);
+
+            if (settings != null)
+            {
+                // Load all [KSPField] public floats by reflection
+                // foreach member field...
+                foreach (FieldInfo f in GetType().GetFields())
+                {
+                    // if they're a [KSPField] float...
+                    if (Attribute.IsDefined(f, typeof(KSPField)) && f.FieldType.Equals(typeof(float)))
+                    {
+                        // load them from the settings file.
+                        if (settings.HasValue(f.Name))
+                            f.SetValue(this, float.Parse(settings.GetValue(f.Name)));
+                    }
+                }
+
+                if (settings.HasValue("tracker"))
+                {
+                    string t = settings.GetValue("tracker");
+                    activeTracker = (int)Enum.Parse(typeof(Enums.Trackers), t, true);
+                }
+                if (settings.HasValue("toggleEnabledKey")) toggleEnabledKey =
+                    (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("toggleEnabledKey"));
+                if (settings.HasValue("resetOrientationKey")) resetOrientationKey =
+                    (KeyCode)Enum.Parse(typeof(KeyCode), settings.GetValue("resetOrientationKey"));
+                if (settings.HasValue("externalTrackingEnabled"))
+                    externalTrackingEnabled = Boolean.Parse(settings.GetValue("externalTrackingEnabled"));
+                if (settings.HasValue("mapTrackingEnabled"))
+                    mapTrackingEnabled = Boolean.Parse(settings.GetValue("mapTrackingEnabled"));
+
+                if (settings.HasValue("joystickId"))
+                    joystickId = Int32.Parse(settings.GetValue("joystickId"));
+                if (settings.HasValue("joyPitchAxisId"))
+                    joyPitchAxisId = Int32.Parse(settings.GetValue("joyPitchAxisId"));
+                if (settings.HasValue("joyPitchInverted"))
+                    joyPitchInverted = Boolean.Parse(settings.GetValue("joyPitchInverted"));
+                if (settings.HasValue("joyYawAxisId"))
+                    joyYawAxisId = Int32.Parse(settings.GetValue("joyYawAxisId"));
+                if (settings.HasValue("joyYawInverted"))
+                    joyYawInverted = Boolean.Parse(settings.GetValue("joyYawInverted"));
+                if (settings.HasValue("joyRollAxisId"))
+                    joyRollAxisId = Int32.Parse(settings.GetValue("joyRollAxisId"));
+                if (settings.HasValue("joyRollInverted"))
+                    joyRollInverted = Boolean.Parse(settings.GetValue("joyRollInverted"));
+                if (settings.HasValue("joyCamPitchAxisId"))
+                    joyCamPitchAxisId = Int32.Parse(settings.GetValue("joyCamPitchAxisId"));
+                if (settings.HasValue("joyCamPitchInverted"))
+                    joyCamPitchInverted = Boolean.Parse(settings.GetValue("joyCamPitchInverted"));
+                if (settings.HasValue("joyCamOrbitAxisId"))
+                    joyCamOrbitAxisId = Int32.Parse(settings.GetValue("joyCamOrbitAxisId"));
+                if (settings.HasValue("joyCamOrbitInverted"))
+                    joyCamOrbitInverted = Boolean.Parse(settings.GetValue("joyCamOrbitInverted"));
+            }
+        }
+
+        #endregion Persistence
+
+        public static int activeTracker = (int)Enums.Trackers.FreeTrack;
+
+        [KSPField]
+        public static KeyCode toggleEnabledKey = KeyCode.ScrollLock;
+        [KSPField]
+        public static KeyCode resetOrientationKey = KeyCode.Home;
+        [KSPField]
+        public static bool externalTrackingEnabled = true;
+        [KSPField]
+        public static bool mapTrackingEnabled = true;
+
+        [KSPField]
+        public static int joystickId = 0;
+        [KSPField]
+        public static int joyPitchAxisId = 1;
+        [KSPField]
+        public static bool joyPitchInverted = false;
+        [KSPField]
+        public static int joyYawAxisId = 0;
+        [KSPField]
+        public static bool joyYawInverted = true;
+        [KSPField]
+        public static int joyRollAxisId = -1;
+        [KSPField]
+        public static bool joyRollInverted = false;
+        [KSPField]
+        public static int joyCamPitchAxisId = -1;
+        [KSPField]
+        public static bool joyCamPitchInverted = false;
+        [KSPField]
+        public static int joyCamOrbitAxisId = -1;
+        [KSPField]
+        public static bool joyCamOrbitInverted = false;
+
+        [KSPField]
+        public static float pitchScaleIVA = 0.3f, pitchOffsetIVA = 0.0f;
+        [KSPField]
+        public static float yawScaleIVA = 0.3f, yawOffsetIVA = 0.0f;
+        [KSPField]
+        public static float rollScaleIVA = 0.15f, rollOffsetIVA = 0.0f;
+        [KSPField]
+        public static float xScale = 0.1f, xOffset = 0.0f;
+        [KSPField]
+        public static float yScale = 0.1f, yOffset = 0.0f;
+        [KSPField]
+        public static float zScale = 0.1f, zOffset = 0.0f;
+        [KSPField]
+        public static float pitchScaleFlight = 0.01f;
+        [KSPField]
+        public static float yawScaleFlight = 0.01f;
+        [KSPField]
+        public static float pitchScaleMap = 0.01f;
+        [KSPField]
+        public static float yawScaleMap = 0.01f;
+
+        // Ignore the built-in max/min values.
+        [KSPField]
+        public static float pitchMaxIVA = 120f;
+        [KSPField]
+        public static float pitchMinIVA = -90f;
+        [KSPField]
+        public static float yawMaxIVA = 135f;
+        [KSPField]
+        public static float yawMinIVA = -135f;
+        [KSPField]
+        public static float rollMaxIVA = 90f;
+        [KSPField]
+        public static float rollMinIVA = -90f;
+        [KSPField]
+        public static float xMaxIVA = 0.15f;
+        [KSPField]
+        public static float xMinIVA = -0.15f;
+        [KSPField]
+        public static float yMaxIVA = 0.1f;
+        [KSPField]
+        public static float yMinIVA = -0.1f;
+        [KSPField]
+        public static float zMaxIVA = 0.1f;
+        [KSPField]
+        public static float zMinIVA = -0.15f;
+
+        // Values after scaling.
+        public static float pv = 0f;
+        public static float yv = 0f;
+        public static float rv = 0f;
+        public static float xp = 0f;
+        public static float yp = 0f;
+        public static float zp = 0f;
+
+        Quaternion lastRotation = Quaternion.identity;
+
+        void Update()
+        {
+            if (Input.GetKeyDown(toggleEnabledKey))
+                trackerEnabled = !trackerEnabled;
+            if (Input.GetKeyDown(resetOrientationKey))
+                tracker.ResetOrientation();
+
+            if (!trackerEnabled)
+                return;
+
             if (tracker != null)
             {
                 Vector3 rot = new Vector3(0, 0, 0);
@@ -546,7 +320,7 @@ public class KerbTrack : MonoBehaviour
                 }
                 catch (Exception e)
                 {
-                    Debug.Log("[KerbTrack] " + GetTrackerName((Trackers)activeTracker) + " error: " + e.Message + "\n" + e.StackTrace);
+                    Debug.Log("[KerbTrack] " + GetTrackerName((Enums.Trackers)activeTracker) + " error: " + e.Message + "\n" + e.StackTrace);
                     trackerEnabled = false;
                     return;
                 }
@@ -567,7 +341,7 @@ public class KerbTrack : MonoBehaviour
                         {
                             if (!externalTrackingEnabled) return;
 
-                            if (activeTracker == (int)Trackers.Joystick)
+                            if (activeTracker == (int)Enums.Trackers.Joystick)
                             {
                                 Vector2 joyCamPos = new Vector3(0, 0);
                                 ((JoystickTracker)tracker).GetFlightCamData(ref joyCamPos);
@@ -588,12 +362,6 @@ public class KerbTrack : MonoBehaviour
                                 bool freeLook = true;
                                 if (freeLook)
                                 {
-                                    pv = pitch * pitchScaleIVA + pitchOffsetIVA;
-                                    yv = yaw * yawScaleIVA + yawOffsetIVA;
-                                    rv = roll * rollScaleIVA + rollOffsetIVA;
-                                    xp = x * xScale + xOffset;
-                                    yp = y * yScale + yOffset;
-                                    zp = z * -zScale + zOffset;
                                     // If tracker supports quaternions, use them directly.
                                     var qtracker = tracker as IQuatTracker;
                                     if (qtracker != null)
@@ -612,6 +380,12 @@ public class KerbTrack : MonoBehaviour
                                     }
                                     else
                                     {
+                                        pv = pitch * pitchScaleIVA + pitchOffsetIVA;
+                                        yv = yaw * yawScaleIVA + yawOffsetIVA;
+                                        rv = roll * rollScaleIVA + rollOffsetIVA;
+                                        xp = x * xScale + xOffset;
+                                        yp = y * yScale + yOffset;
+                                        zp = z * -zScale + zOffset;
                                         FlightCamera.fetch.transform.localEulerAngles = new Vector3(pv, yv, rv);
                                     }
                                     //FlightCamera.fetch.transform.localPosition = new Vector3(xp, yp, zp);
@@ -622,6 +396,7 @@ public class KerbTrack : MonoBehaviour
                                 }
                                 else
                                 {
+                                    // Orbit around the vessel in the same way as the stock camera.
                                     FlightCamera.fetch.camPitch = -pitch * pitchScaleFlight;
                                     FlightCamera.fetch.camHdg = -yaw * yawScaleFlight;
                                 }
@@ -666,33 +441,33 @@ public class KerbTrack : MonoBehaviour
                     case CameraManager.CameraMode.Map:
                         {
                             if (!mapTrackingEnabled) return;
-                            PlanetariumCamera.fetch.camPitch = -pitch * pitchScaleFlight;
-                            PlanetariumCamera.fetch.camHdg = -yaw * yawScaleFlight;
-                            pv = pitch * pitchScaleFlight;
-                            yv = yaw * yawScaleFlight;
+                            PlanetariumCamera.fetch.camPitch = -pitch * pitchScaleMap;
+                            PlanetariumCamera.fetch.camHdg = -yaw * yawScaleMap;
+                            pv = pitch * pitchScaleMap;
+                            yv = yaw * yawScaleMap;
                             break;
                         }
                 }
             }
         }
-    }
 
-    void LateUpdate()
-    {
-        var qtracker = tracker as IQuatTracker;
-        if (qtracker != null)
+        void LateUpdate()
         {
-            //var joystickRotation = FlightCamera.fetch.transform.localRotation;
-            var quat = FlightCamera.fetch.transform.localRotation;
-            qtracker.GetQuatData(ref quat);
-            Quaternion deltaRot;
-            if (lastRotation != Quaternion.identity)
-                deltaRot = Quaternion.Inverse(lastRotation) * quat;
-            else
-                deltaRot = quat;
-            lastRotation = quat;
+            var qtracker = tracker as IQuatTracker;
+            if (qtracker != null)
+            {
+                //var joystickRotation = FlightCamera.fetch.transform.localRotation;
+                var quat = FlightCamera.fetch.transform.localRotation;
+                qtracker.GetQuatData(ref quat);
+                Quaternion deltaRot;
+                if (lastRotation != Quaternion.identity)
+                    deltaRot = Quaternion.Inverse(lastRotation) * quat;
+                else
+                    deltaRot = quat;
+                lastRotation = quat;
 
-            FlightCamera.fetch.transform.localRotation = FlightCamera.fetch.transform.localRotation * deltaRot;
+                FlightCamera.fetch.transform.localRotation = FlightCamera.fetch.transform.localRotation * deltaRot;
+            }
         }
     }
 }

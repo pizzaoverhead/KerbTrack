@@ -79,8 +79,9 @@
     <Reference Include="Toolbar">
       <HintPath>..\External binaries\Toolbar.dll</HintPath>
     </Reference>
-    <Reference Include="TrackIRUnity">
-      <HintPath>..\External binaries\TrackIRUnity.dll</HintPath>
+    <Reference Include="TrackIRUnity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Squad binaries\x64\TrackIRUnity.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -88,18 +89,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums.cs" />
     <Compile Include="FreeTrackTracker.cs" />
     <Compile Include="GuiUtils.cs" />
     <Compile Include="ITracker.cs" />
     <Compile Include="JoystickAxis.cs" />
     <Compile Include="JoystickTracker.cs" />
     <Compile Include="KerbTrack.cs" />
+    <Compile Include="KerbTrackGui.cs" />
     <Compile Include="OVRTracker.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TrackIRTracker.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"C:\dev\KSP\pdb2mdb\pdb2mdb.exe" "$(TargetPath)"

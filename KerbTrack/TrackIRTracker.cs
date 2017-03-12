@@ -1,5 +1,6 @@
 ﻿using TrackIRUnity;
 using UnityEngine;
+using Microsoft.Win32;
 
 public class TrackIRTracker : ITracker
 {
@@ -8,12 +9,27 @@ public class TrackIRTracker : ITracker
     public TrackIRTracker()
     {
         Debug.Log("[KerbTrack] Initialising TrackIR...");
-        trackIRclient = new TrackIRUnity.TrackIRClient();
+
+        // TrackIRUnity's init throws a NullRef if the DLL location isn't found.
+        // Check this before starting.
+        bool keyFound = false;
+        RegistryKey registryKey = Registry.CurrentUser.OpenSubKey("Software\\NaturalPoint\\NATURALPOINT\\NPClient Location", false);
+        if (registryKey != null && registryKey.GetValue("Path") != null)
+            keyFound = true;
+        registryKey.Close();
+
         string status;
-        if (trackIRclient == null)
-            status = "Failed to start.";
+        if (keyFound)
+        {
+            trackIRclient = new TrackIRUnity.TrackIRClient();
+            if (trackIRclient == null)
+                status = "Failed to start.";
+            else
+                status = trackIRclient.TrackIR_Enhanced_Init();
+        }
         else
-            status = trackIRclient.TrackIR_Enhanced_Init();
+            status = "TrackIR not installed";
+
         Debug.Log("[KerbTrack] TrackIR status: " + status);
     }
 
