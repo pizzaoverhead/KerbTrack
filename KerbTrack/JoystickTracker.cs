@@ -42,9 +42,27 @@ namespace KerbTrack
                 if (KerbTrack.joyRollInverted)
                     rot.z *= -1;
             }
-
-            //rot.x = pitch;
-            //rot.y = yaw;
+            if (KerbTrack.joyXAxisId != -1)
+            {
+                string xAxis = "joy" + KerbTrack.joystickId + "." + KerbTrack.joyXAxisId;
+                pos.x = Input.GetAxis(xAxis);
+                if (KerbTrack.joyXInverted)
+                    pos.x *= -1;
+            }
+            if (KerbTrack.joyYAxisId != -1)
+            {
+                string yAxis = "joy" + KerbTrack.joystickId + "." + KerbTrack.joyYAxisId;
+                pos.y = Input.GetAxis(yAxis);
+                if (KerbTrack.joyYInverted)
+                    pos.y *= -1;
+            }
+            if (KerbTrack.joyZAxisId != -1)
+            {
+                string zAxis = "joy" + KerbTrack.joystickId + "." + KerbTrack.joyZAxisId;
+                pos.z = Input.GetAxis(zAxis);
+                if (KerbTrack.joyZInverted)
+                    pos.z *= -1;
+            }
         }
 
         public void GetFlightCamData(ref Vector2 rot)

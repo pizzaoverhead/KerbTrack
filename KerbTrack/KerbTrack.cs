@@ -133,12 +133,19 @@ namespace KerbTrack
             settings.AddValue("mapTrackingEnabled", mapTrackingEnabled.ToString());
 
             settings.AddValue("joystickId", joystickId.ToString());
-            settings.AddValue("joypitchAxisId", joyPitchAxisId.ToString());
+            settings.AddValue("joyPitchAxisId", joyPitchAxisId.ToString());
             settings.AddValue("joyPitchInverted", joyPitchInverted.ToString());
-            settings.AddValue("joyyawAxisId", joyYawAxisId.ToString());
+            settings.AddValue("joyYawAxisId", joyYawAxisId.ToString());
             settings.AddValue("joyYawInverted", joyYawInverted.ToString());
-            settings.AddValue("joyrollAxisId", joyRollAxisId.ToString());
+            settings.AddValue("joyRollAxisId", joyRollAxisId.ToString());
             settings.AddValue("joyRollInverted", joyRollInverted.ToString());
+            settings.AddValue("joyXAxisId", joyXAxisId.ToString());
+            settings.AddValue("joyXInverted", joyXInverted.ToString());
+            settings.AddValue("joyYAxisId", joyYAxisId.ToString());
+            settings.AddValue("joyYInverted", joyYInverted.ToString());
+            settings.AddValue("joyZAxisId", joyZAxisId.ToString());
+            settings.AddValue("joyZInverted", joyZInverted.ToString());
+
             settings.AddValue("joyCamPitchAxisId", joyCamPitchAxisId.ToString());
             settings.AddValue("joyCamPitchInverted", joyCamPitchInverted.ToString());
             settings.AddValue("joyCamOrbitAxisId", joyCamOrbitAxisId.ToString());
@@ -196,6 +203,18 @@ namespace KerbTrack
                     joyRollAxisId = Int32.Parse(settings.GetValue("joyRollAxisId"));
                 if (settings.HasValue("joyRollInverted"))
                     joyRollInverted = Boolean.Parse(settings.GetValue("joyRollInverted"));
+                if (settings.HasValue("joyXAxisId"))
+                    joyXAxisId = Int32.Parse(settings.GetValue("joyXAxisId"));
+                if (settings.HasValue("joyXInverted"))
+                    joyXInverted = Boolean.Parse(settings.GetValue("joyXInverted"));
+                if (settings.HasValue("joyYAxisId"))
+                    joyYAxisId = Int32.Parse(settings.GetValue("joyYAxisId"));
+                if (settings.HasValue("joyYInverted"))
+                    joyYInverted = Boolean.Parse(settings.GetValue("joyYInverted"));
+                if (settings.HasValue("joyZAxisId"))
+                    joyZAxisId = Int32.Parse(settings.GetValue("joyZAxisId"));
+                if (settings.HasValue("joyZInverted"))
+                    joyZInverted = Boolean.Parse(settings.GetValue("joyZInverted"));
                 if (settings.HasValue("joyCamPitchAxisId"))
                     joyCamPitchAxisId = Int32.Parse(settings.GetValue("joyCamPitchAxisId"));
                 if (settings.HasValue("joyCamPitchInverted"))
@@ -209,7 +228,7 @@ namespace KerbTrack
 
         #endregion Persistence
 
-        public static int activeTracker = (int)Enums.Trackers.FreeTrack;
+        public static int activeTracker = (int)Enums.Trackers.Joystick;
 
         [KSPField]
         public static KeyCode toggleEnabledKey = KeyCode.ScrollLock;
@@ -223,17 +242,29 @@ namespace KerbTrack
         [KSPField]
         public static int joystickId = 0;
         [KSPField]
-        public static int joyPitchAxisId = 1;
-        [KSPField]
-        public static bool joyPitchInverted = false;
-        [KSPField]
         public static int joyYawAxisId = 0;
         [KSPField]
         public static bool joyYawInverted = true;
         [KSPField]
+        public static int joyPitchAxisId = 1;
+        [KSPField]
+        public static bool joyPitchInverted = true;
+        [KSPField]
         public static int joyRollAxisId = -1;
         [KSPField]
         public static bool joyRollInverted = false;
+        [KSPField]
+        public static int joyXAxisId = 3;
+        [KSPField]
+        public static bool joyXInverted = false;
+        [KSPField]
+        public static int joyYAxisId = 4;
+        [KSPField]
+        public static bool joyYInverted = true;
+        [KSPField]
+        public static int joyZAxisId = 2;
+        [KSPField]
+        public static bool joyZInverted = false;
         [KSPField]
         public static int joyCamPitchAxisId = -1;
         [KSPField]

@@ -79,10 +79,6 @@
     <Reference Include="Toolbar">
       <HintPath>..\External binaries\Toolbar.dll</HintPath>
     </Reference>
-    <Reference Include="TrackIRUnity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Squad binaries\x64\TrackIRUnity.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Squad binaries\x64\UnityEngine.dll</HintPath>
@@ -101,6 +97,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TrackIRClient.cs" />
     <Compile Include="TrackIRTracker.cs" />
   </ItemGroup>
   <ItemGroup />

@@ -11,6 +11,7 @@ namespace KerbTrack
         public static bool guiVisible = false;
         private static Rect windowPos = new Rect(Screen.width / 4, Screen.height / 4, 10f, 10f);
         private static string[] trackerNames = Enum.GetNames(typeof(Enums.Trackers));
+        public const int MaxAxisNum = 19;
 
         private static void MainGUI(int windowID)
         {
@@ -180,89 +181,32 @@ namespace KerbTrack
                 KerbTrack.joystickId = joysticks.Length - 1;
             GUILayout.Space(10);
 
-            int maxAxisNum = 19;
+            SelectAxis(ref KerbTrack.joyYawAxisId, ref KerbTrack.joyYawInverted, "Yaw");
+            SelectAxis(ref KerbTrack.joyPitchAxisId, ref KerbTrack.joyPitchInverted, "Pitch");
+            SelectAxis(ref KerbTrack.joyRollAxisId, ref KerbTrack.joyRollInverted, "Roll");
+            SelectAxis(ref KerbTrack.joyXAxisId, ref KerbTrack.joyXInverted, "X");
+            SelectAxis(ref KerbTrack.joyYAxisId, ref KerbTrack.joyYInverted, "Y");
+            SelectAxis(ref KerbTrack.joyZAxisId, ref KerbTrack.joyZInverted, "Z");
+            SelectAxis(ref KerbTrack.joyCamOrbitAxisId, ref KerbTrack.joyCamOrbitInverted, "Flight Camera Orbit");
+            SelectAxis(ref KerbTrack.joyCamPitchAxisId, ref KerbTrack.joyCamPitchInverted, "Flight Camera Pitch");
+        }
 
-            // Pitch axis selection.
-            string pitchLabel = KerbTrack.joyPitchAxisId == -1 ? "Disabled" : KerbTrack.joyPitchAxisId.ToString();
-            GuiUtils.LabelValue("Pitch axis", pitchLabel);
+        private static void SelectAxis(ref int axisId, ref bool axisInverted, string axisName)
+        {
+            string label = axisId == -1 ? "Disabled" : axisId.ToString();
+            GuiUtils.LabelValue(axisName + " axis", label);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Previous pitch axis"))
-                KerbTrack.joyPitchAxisId--;
-            if (GUILayout.Button("Next pitch axis"))
-                KerbTrack.joyPitchAxisId++;
-            KerbTrack.joyPitchInverted = GUILayout.Toggle(KerbTrack.joyPitchInverted, "Inverted");
+            if (GUILayout.Button("Previous " + axisName + " Axis"))
+                axisId--;
+            if (GUILayout.Button("Next " + axisName + " Axis"))
+                axisId++;
+            axisInverted = GUILayout.Toggle(axisInverted, "Inverted");
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
-
-            if (KerbTrack.joyPitchAxisId > maxAxisNum)
-                KerbTrack.joyPitchAxisId = 0;
-            if (KerbTrack.joyPitchAxisId < -1)
-                KerbTrack.joyPitchAxisId = maxAxisNum;
-
-            // Yaw axis selection.
-            string yawLabel = KerbTrack.joyYawAxisId == -1 ? "Disabled" : KerbTrack.joyYawAxisId.ToString();
-            GuiUtils.LabelValue("Yaw axis", yawLabel);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Previous yaw axis"))
-                KerbTrack.joyYawAxisId--;
-            if (GUILayout.Button("Next yaw axis"))
-                KerbTrack.joyYawAxisId++;
-            KerbTrack.joyYawInverted = GUILayout.Toggle(KerbTrack.joyYawInverted, "Inverted");
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-
-            if (KerbTrack.joyYawAxisId > maxAxisNum)
-                KerbTrack.joyYawAxisId = 0;
-            if (KerbTrack.joyYawAxisId < -1)
-                KerbTrack.joyYawAxisId = maxAxisNum;
-
-            // Roll axis selection.
-            string rollLabel = KerbTrack.joyRollAxisId == -1 ? "Disabled" : KerbTrack.joyRollAxisId.ToString();
-            GuiUtils.LabelValue("Roll axis", rollLabel);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Previous roll axis"))
-                KerbTrack.joyRollAxisId--;
-            if (GUILayout.Button("Next roll axis"))
-                KerbTrack.joyRollAxisId++;
-            KerbTrack.joyRollInverted = GUILayout.Toggle(KerbTrack.joyRollInverted, "Inverted");
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-            if (KerbTrack.joyRollAxisId > maxAxisNum)
-                KerbTrack.joyRollAxisId = 0;
-            if (KerbTrack.joyRollAxisId < -1)
-                KerbTrack.joyRollAxisId = maxAxisNum;
-
-            // Flight camera orbit axis selection.
-            string camOrbitLabel = KerbTrack.joyCamOrbitAxisId == -1 ? "Disabled" : KerbTrack.joyCamOrbitAxisId.ToString();
-            GuiUtils.LabelValue("Flight camera orbit axis", camOrbitLabel);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Previous orbit axis"))
-                KerbTrack.joyCamOrbitAxisId--;
-            if (GUILayout.Button("Next orbit axis"))
-                KerbTrack.joyCamOrbitAxisId++;
-            KerbTrack.joyCamOrbitInverted = GUILayout.Toggle(KerbTrack.joyCamOrbitInverted, "Inverted");
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-            if (KerbTrack.joyCamOrbitAxisId > maxAxisNum)
-                KerbTrack.joyCamOrbitAxisId = 0;
-            if (KerbTrack.joyCamOrbitAxisId < -1)
-                KerbTrack.joyCamOrbitAxisId = maxAxisNum;
-
-            // Flight camera pitch axis selection.
-            string camPitchLabel = KerbTrack.joyCamPitchAxisId == -1 ? "Disabled" : KerbTrack.joyCamPitchAxisId.ToString();
-            GuiUtils.LabelValue("Flight camera pitch axis", camPitchLabel);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Previous cam pitch axis"))
-                KerbTrack.joyCamPitchAxisId--;
-            if (GUILayout.Button("Next cam pitch axis"))
-                KerbTrack.joyCamPitchAxisId++;
-            KerbTrack.joyRollInverted = GUILayout.Toggle(KerbTrack.joyRollInverted, "Inverted");
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-            if (KerbTrack.joyCamPitchAxisId > maxAxisNum)
-                KerbTrack.joyCamPitchAxisId = 0;
-            if (KerbTrack.joyCamPitchAxisId < -1)
-                KerbTrack.joyCamPitchAxisId = maxAxisNum;
+            if (axisId > MaxAxisNum)
+                axisId = 0;
+            if (axisId < -1)
+                axisId = MaxAxisNum;
         }
 
         private static bool _showSettingsGui = false;
@@ -275,6 +219,28 @@ namespace KerbTrack
             KerbTrack.activeTracker = GuiUtils.RadioButton(trackerNames, KerbTrack.activeTracker);
             if (oldTracker != KerbTrack.activeTracker)
                 KerbTrack.ChangeTracker((Enums.Trackers)KerbTrack.activeTracker);
+
+            Enums.Trackers currentTracker = (Enums.Trackers)KerbTrack.activeTracker;
+            switch (currentTracker)
+            {
+                case Enums.Trackers.FreeTrack:
+                    GUILayout.Label("<b>FreeTrack</b>\r\nThis is used for FaceTrackNoIR. Freetrackclient.dll must be placed next to KSP.exe, and must be a 64-bit version if 64-bit KSP is used.");
+                    break;
+                case Enums.Trackers.TrackIR:
+                    GUILayout.Label("<b>TrackIR</b>\r\nSupports TrackIR and other systems which emulate it, such as opentrack.\r\n" +
+                        "<b>opentrack</b>\r\nWhen using opentrack, select the Input tracker appripriate to your hardware setup, and select \"freetrack 2.0 Enhanced\" as the Output.\r\n" +
+                        "In the Output settings, ensure \"Use TrackIR\" or \"Enable both\" is selected.");
+                    break;
+                case Enums.Trackers.OculusRift:
+                    GUILayout.Label("<b>Oculus Rift</b>\r\nRequires an older version of the Oculus Rift runtime (2015), and only 64-bit is supported.\r\n" + 
+                        "It's recommended to select \"TrackIR\" as your tracker and use opentrack instead.\r\n" +
+                        "Place \"Oculus OVR PosRotWrapper 64-bit.dll\" next to KSP.exe.");
+                    break;
+                case Enums.Trackers.Joystick:
+                    GUILayout.Label("<b>Joystick</b>\r\nUse your joystick axes as input. Good for assigning to a spare axis on a joystick if you don't have a head tracker.\r\n" +
+                        "If you have a head tracker that isn't supported, try setting it to output as a joystick and using this setting to receive it in KerbTrack.");
+                    break;
+            }
         }
     }
 }
