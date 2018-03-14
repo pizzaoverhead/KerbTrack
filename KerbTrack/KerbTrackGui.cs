@@ -223,19 +223,19 @@ namespace KerbTrack
             Enums.Trackers currentTracker = (Enums.Trackers)KerbTrack.activeTracker;
             switch (currentTracker)
             {
-                case Enums.Trackers.FreeTrack:
+                /*case Enums.Trackers.FreeTrack:
                     GUILayout.Label("<b>FreeTrack</b>\r\nThis is used for FaceTrackNoIR. Freetrackclient.dll must be placed next to KSP.exe, and must be a 64-bit version if 64-bit KSP is used.");
-                    break;
+                    break;*/
                 case Enums.Trackers.TrackIR:
                     GUILayout.Label("<b>TrackIR</b>\r\nSupports TrackIR and other systems which emulate it, such as opentrack.\r\n" +
                         "<b>opentrack</b>\r\nWhen using opentrack, select the Input tracker appripriate to your hardware setup, and select \"freetrack 2.0 Enhanced\" as the Output.\r\n" +
                         "In the Output settings, ensure \"Use TrackIR\" or \"Enable both\" is selected.");
                     break;
-                case Enums.Trackers.OculusRift:
+                /*case Enums.Trackers.OculusRift:
                     GUILayout.Label("<b>Oculus Rift</b>\r\nRequires an older version of the Oculus Rift runtime (2015), and only 64-bit is supported.\r\n" + 
                         "It's recommended to select \"TrackIR\" as your tracker and use opentrack instead.\r\n" +
                         "Place \"Oculus OVR PosRotWrapper 64-bit.dll\" next to KSP.exe.");
-                    break;
+                    break;*/
                 case Enums.Trackers.Joystick:
                     GUILayout.Label("<b>Joystick</b>\r\nUse your joystick axes as input. Good for assigning to a spare axis on a joystick if you don't have a head tracker.\r\n" +
                         "If you have a head tracker that isn't supported, try setting it to output as a joystick and using this setting to receive it in KerbTrack.");

@@ -38,24 +38,24 @@ namespace KerbTrack
             {
                 switch (t)
                 {
-                    case Enums.Trackers.FreeTrack:
+                    /*case Enums.Trackers.FreeTrack:
                         {
                             Debug.Log("[KerbTrack] Using FreeTrack");
                             tracker = new FreeTrackTracker();
                             break;
-                        }
+                        }*/
                     case Enums.Trackers.TrackIR:
                         {
                             Debug.Log("[KerbTrack] Using TrackIR");
                             tracker = new TrackIRTracker();
                             break;
                         }
-                    case Enums.Trackers.OculusRift:
+                    /*case Enums.Trackers.OculusRift:
                         {
                             Debug.Log("[KerbTrack] Using Oculus Rift");
                             tracker = new OVRTracker();
                             break;
-                        }
+                        }*/
                     case Enums.Trackers.Joystick:
                         {
                             Debug.Log("KerbTrack: Using Joystick");
