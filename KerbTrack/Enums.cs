@@ -9,10 +9,11 @@ namespace KerbTrack
     {
         public enum Trackers
         {
-            //FreeTrack = 0,
-            TrackIR = 0,
-            //OculusRift = 2,
-            Joystick = 1
+            //FreeTrack,
+            TrackIR,
+            //OculusRift,
+            Joystick,
+            OpentrackUdp
         }
     }
 }

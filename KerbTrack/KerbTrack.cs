@@ -25,7 +25,8 @@ namespace KerbTrack
         public static ITracker tracker;
 
         // [...]GameData\KerbTrack\Plugins\PluginData\KerbTrack\settings.cfg
-        private string savePath = AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)).Replace("/", @"\\") + @"\\settings.cfg";
+        private string savePath = System.IO.Path.Combine(
+            AssemblyLoader.loadedAssemblies.GetPathByType(typeof(KerbTrack)), "settings.cfg");
 
         public string GetTrackerName(Enums.Trackers t)
         {
@@ -36,6 +37,9 @@ namespace KerbTrack
         {
             try
             {
+                if(tracker != null)
+                    tracker.Stop();
+
                 switch (t)
                 {
                     /*case Enums.Trackers.FreeTrack:
@@ -62,7 +66,15 @@ namespace KerbTrack
                             tracker = new JoystickTracker();
                             break;
                         }
+                    case Enums.Trackers.OpentrackUdp:
+                        {
+                            Debug.Log("KerbTrack: Using OpentrackUdp");
+                            tracker = new OpentrackUdpTracker();
+                            break;
+                        }
                 }
+
+                trackerEnabled = true;
             }
             catch (Exception)
             {
@@ -70,7 +82,6 @@ namespace KerbTrack
                 throw;
             }
         }
-
 
         void Start()
         {

@@ -9,6 +9,8 @@ public interface ITracker
     //Vector3d GetPosition();
 
     void ResetOrientation();
+
+    void Stop();
 }
 
 // Only use this if your rotation data is authoritive!

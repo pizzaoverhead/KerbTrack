@@ -72,4 +72,6 @@ public class OVRTracker : ITracker, IQuatTracker
     {
         wrapper_reset_orientation(wrapper);
     }
+
+    public void Stop() { }
 }
