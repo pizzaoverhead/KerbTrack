@@ -10,10 +10,11 @@ class OpentrackUdpTracker : ITracker
 {
     protected Vector3 rotationState;
     protected Vector3 positionState;
-    protected UdpClient client;
+    protected UdpClient client = null;
     protected IPEndPoint clientEndPoint;
     protected IPEndPoint serverEndPoint;
-    protected bool runThread;
+    protected bool runThread = false;
+    protected Thread worker = null;
     protected readonly object updateLock;
 
     public OpentrackUdpTracker()
@@ -36,18 +37,24 @@ class OpentrackUdpTracker : ITracker
     public void Start()
     {
         // TODO configurable port and limit server ip
+        this.Stop();
         this.serverEndPoint = new IPEndPoint(IPAddress.Any, 0);
         this.clientEndPoint = new IPEndPoint(IPAddress.Any, 4242);
         this.client = new UdpClient(this.clientEndPoint);
         this.runThread = true;
-        new Thread(Worker).Start();
+        this.worker = new Thread(Worker);
+        this.worker.Start();
     }
 
     public void Stop()
     {
         this.runThread = false;
         if(this.client != null)
-            this.client.Close();
+            this.client.Close();  // will stop worker blocking on recieve
+
+        // Make sure the thread is finished before we can call start again
+        if(this.worker != null)
+            this.worker.Join();
     }
 
     protected void Worker()
@@ -86,7 +93,8 @@ class OpentrackUdpTracker : ITracker
             catch(SocketException e)
             {
                 // TODO log it
-                System.Threading.Thread.Sleep(0); // `Yield` for dotnet 3.5
+                if(this.runThread)
+                    System.Threading.Thread.Sleep(0); // `Yield` for dotnet 3.5
             }
         }
     }
