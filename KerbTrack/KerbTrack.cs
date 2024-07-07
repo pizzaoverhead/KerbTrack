@@ -428,7 +428,7 @@ namespace KerbTrack
                                         xp = x * xScale + xOffset;
                                         yp = y * yScale + yOffset;
                                         zp = z * -zScale + zOffset;
-                                        FlightCamera.fetch.transform.localEulerAngles = new Vector3(pv, yv, rv);
+                                        FlightCamera.fetch.transform.localEulerAngles = new Vector3(-pv, -yv, rv);
                                     }
                                     //FlightCamera.fetch.transform.localPosition = new Vector3(xp, yp, zp);
                                     // Without setting the flight camera transform, the pod rotates about without changing the background.
