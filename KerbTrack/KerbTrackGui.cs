@@ -240,6 +240,9 @@ namespace KerbTrack
                     GUILayout.Label("<b>Joystick</b>\r\nUse your joystick axes as input. Good for assigning to a spare axis on a joystick if you don't have a head tracker.\r\n" +
                         "If you have a head tracker that isn't supported, try setting it to output as a joystick and using this setting to receive it in KerbTrack.");
                     break;
+                case Enums.Trackers.OpentrackUdp:
+                    GUILayout.Label("<b>Opentrack Udp</b>\r\n Supports opentrack's udp protocol, listening on port 4242.");
+                    break;
             }
         }
     }

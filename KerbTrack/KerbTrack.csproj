@@ -93,6 +93,7 @@
     <Compile Include="JoystickTracker.cs" />
     <Compile Include="KerbTrack.cs" />
     <Compile Include="KerbTrackGui.cs" />
+    <Compile Include="OpentrackUdpTracker.cs" />
     <Compile Include="OVRTracker.cs">
       <SubType>Code</SubType>
     </Compile>

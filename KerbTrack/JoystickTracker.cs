@@ -97,5 +97,6 @@ namespace KerbTrack
         }
 
         public void ResetOrientation() { }
+        public void Stop() { }
     }
 }

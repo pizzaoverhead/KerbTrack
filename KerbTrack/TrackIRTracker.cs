@@ -49,4 +49,5 @@ public class TrackIRTracker : ITracker
     }
 
     public void ResetOrientation() { }
+    public void Stop() { }
 }
